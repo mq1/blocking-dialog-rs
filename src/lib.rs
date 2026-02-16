@@ -7,15 +7,15 @@
 mod os_dialog;
 
 use raw_window_handle::WindowHandle;
-use std::process::ExitStatus;
+use std::io;
 use thiserror::Error;
 
-#[derive(Error, Debug, Clone, Copy)]
+#[derive(Error, Debug)]
 pub enum BlockingDialogError {
     #[error("The dialog is not running on the main thread")]
     NotOnMainThread,
-    #[error("The dialog process exited with status {0}")]
-    ExitStatus(ExitStatus),
+    #[error("IO error: {0}")]
+    Io(#[from] io::Error),
 }
 
 #[derive(Debug, Clone, Copy)]

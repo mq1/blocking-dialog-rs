@@ -16,16 +16,13 @@ impl<'a> BlockingAlertDialog<'a> {
     pub fn show(&self) -> Result<(), BlockingDialogError> {
         let level_flag = get_level_flag(self.level);
 
-        if let Err(status) = Command::new("zenity")
+        let _ = Command::new("zenity")
             .arg(level_flag)
             .arg("--title")
             .arg(self.title)
             .arg("--text")
             .arg(self.message)
-            .status()
-        {
-            return Err(BlockingDialogError::ExitStatus(status));
-        }
+            .status()?;
 
         Ok(())
     }
