@@ -5,6 +5,34 @@
 use blocking_dialog::BlockingDialogLevel;
 
 #[cfg(feature = "cli")]
+const HELP: &str = "\
+blocking-dialog - Display system dialog boxes from the command line
+
+USAGE:
+    blocking-dialog [OPTIONS] <MESSAGE>
+
+ARGS:
+    <MESSAGE>    The message text to display in the dialog box
+
+OPTIONS:
+    -t, --title <TITLE>    Set the dialog title [default: BlockingDialog]
+    -i, --info             Show an information dialog (default)
+    -w, --warning          Show a warning dialog
+    -e, --error            Show an error dialog
+    -h, --help             Print this help message
+
+EXAMPLES:
+    # Show a basic info dialog
+    blocking-dialog \"Hello, World!\"
+
+    # Show an error dialog with custom title
+    blocking-dialog --error --title \"Error\" \"Something went wrong!\"
+
+    # Show a warning dialog
+    blocking-dialog -w -t \"Warning\" \"Proceed with caution\"\
+";
+
+#[cfg(feature = "cli")]
 struct Args {
     level: BlockingDialogLevel,
     title: String,
@@ -38,7 +66,7 @@ fn parse_args() -> Result<Args, lexopt::Error> {
                 level = BlockingDialogLevel::Error;
             }
             Short('h') | Long("help") => {
-                println!("Usage: which-fs PATH");
+                println!("{HELP}");
                 std::process::exit(0);
             }
             _ => return Err(arg.unexpected()),
