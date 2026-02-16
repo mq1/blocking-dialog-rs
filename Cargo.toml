@@ -24,5 +24,5 @@ objc2-foundation = "0.3"
 objc2-app-kit = "0.3"
 
 [target.'cfg(target_os = "windows")'.dependencies]
-windows = { version = ">=0.59, <=0.62", features = ["Win32_Storage_FileSystem"] }
+windows = { version = ">=0.59, <=0.62", features = ["Win32_UI_Controls_Dialogs"] }
 
