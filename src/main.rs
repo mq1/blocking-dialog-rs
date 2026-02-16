@@ -26,7 +26,7 @@ OPTIONS:
 EXAMPLES:
     blocking-dialog \"Hello world\"
     blocking-dialog -et \"An error\" \"Hello world\"
-    blocking-dialog -ct \"A confirmation\" \"Hello world\"
+    blocking-dialog -ct \"A confirmation\" \"Hello world\"\
 ";
 
 #[cfg(feature = "cli")]
