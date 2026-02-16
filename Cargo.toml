@@ -1,0 +1,28 @@
+[package]
+name = "blocking-dialog"
+version = "0.0.1"
+edition = "2024"
+rust-version = "1.85"
+authors = ["Manuel Quarneti <mq1@ik.me>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/mq1/blocking-dialog-rs"
+homepage = "https://github.com/mq1/blocking-dialog-rs"
+description = "minimal file dialog implementation"
+
+[features]
+default = []
+cli = ["dep:lexopt"]
+
+[dependencies]
+thiserror = "2.0"
+raw-window-handle = "0.6"
+lexopt = { version = "0.3", optional = true }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+objc2-foundation = "0.3"
+objc2-app-kit = "0.3"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+windows = { version = ">=0.59, <=0.62", features = ["Win32_Storage_FileSystem"] }
+
