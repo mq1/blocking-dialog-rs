@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Manuel Quarneti <mq1@ik.me>
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use crate::windows::widen;
+use super::widen;
 use crate::{BlockingAlertDialog, BlockingDialogError, BlockingDialogLevel};
 use windows::Win32::Foundation::HWND;
 use windows::Win32::UI::WindowsAndMessaging::{
@@ -25,7 +25,7 @@ impl<'a> BlockingAlertDialog<'a> {
         let message_wide = widen(self.message);
 
         let hwnd = if let Some(handle) = self.window
-            && let RawWindowHandle::Win32(handle) = window.as_raw()
+            && let RawWindowHandle::Win32(handle) = handle.as_raw()
         {
             Some(HWND(handle.hwnd.get() as *mut _));
         } else {
