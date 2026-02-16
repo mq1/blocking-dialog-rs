@@ -6,16 +6,12 @@ use std::path::PathBuf;
 use std::process::Command;
 
 fn parse_multi_select(raw: &str) -> Vec<PathBuf> {
-    raw.split('|').map(PathBuf::from)
+    raw.split('|').map(PathBuf::from).collect()
 }
 
 impl<'a> BlockingPickFilesDialog<'a> {
     pub fn show(&self) -> Result<Vec<PathBuf>, BlockingDialogError> {
         let mut args = vec!["--file-selection", "--title", self.title];
-
-        if self.directory {
-            args.push("--directory");
-        }
 
         if self.multiple {
             args.push("--multiple");
