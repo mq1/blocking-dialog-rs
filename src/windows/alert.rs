@@ -3,6 +3,7 @@
 
 use super::widen;
 use crate::{BlockingAlertDialog, BlockingDialogError, BlockingDialogLevel};
+use raw_window_handle::RawWindowHandle;
 use windows::Win32::Foundation::HWND;
 use windows::Win32::UI::WindowsAndMessaging::{
     MB_ICONERROR, MB_ICONINFORMATION, MB_ICONWARNING, MB_OK, MESSAGEBOX_STYLE, MessageBoxW,
@@ -10,13 +11,11 @@ use windows::Win32::UI::WindowsAndMessaging::{
 use windows::core::PCWSTR;
 
 fn get_utype(level: BlockingDialogLevel) -> MESSAGEBOX_STYLE {
-    let flags = match level {
+    match level {
         BlockingDialogLevel::Info => MB_OK | MB_ICONINFORMATION,
         BlockingDialogLevel::Warning => MB_OK | MB_ICONWARNING,
         BlockingDialogLevel::Error => MB_OK | MB_ICONERROR,
-    };
-
-    MESSAGEBOX_STYLE(flags)
+    }
 }
 
 impl<'a> BlockingAlertDialog<'a> {
@@ -27,7 +26,7 @@ impl<'a> BlockingAlertDialog<'a> {
         let hwnd = if let Some(handle) = self.window
             && let RawWindowHandle::Win32(handle) = handle.as_raw()
         {
-            Some(HWND(handle.hwnd.get() as *mut _));
+            Some(HWND(handle.hwnd.get() as *mut _))
         } else {
             None
         };
