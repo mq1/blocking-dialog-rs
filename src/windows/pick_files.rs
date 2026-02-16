@@ -17,7 +17,7 @@ use windows::{
 fn get_filter_utf16(filter: &[BlockingPickFilesDialogFilter]) -> Vec<u16> {
     let mut s = String::new();
 
-    for entry in filters {
+    for entry in filter {
         s.push_str(&entry.name);
         s.push(char::from(0));
 
