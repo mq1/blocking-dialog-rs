@@ -32,3 +32,11 @@ pub struct BlockingAlertDialog<'a> {
     pub message: &'a str,
     pub level: BlockingDialogLevel,
 }
+
+#[derive(Debug, Clone)]
+pub struct BlockingConfirmDialog<'a> {
+    pub window: Option<WindowHandle<'a>>,
+    pub title: &'a str,
+    pub message: &'a str,
+    pub level: BlockingDialogLevel,
+}
