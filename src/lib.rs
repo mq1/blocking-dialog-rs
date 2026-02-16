@@ -16,6 +16,8 @@ pub enum BlockingDialogError {
     NotOnMainThread,
     #[error("IO error: {0}")]
     Io(#[from] io::Error),
+    #[error("Unsupported windowing system")]
+    UnsupportedWindowingSystem,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -27,7 +29,7 @@ pub enum BlockingDialogLevel {
 
 #[derive(Debug, Clone)]
 pub struct BlockingAlertDialog<'a> {
-    pub window: Option<WindowHandle<'a>>,
+    pub window: WindowHandle<'a>,
     pub title: &'a str,
     pub message: &'a str,
     pub level: BlockingDialogLevel,
@@ -35,7 +37,7 @@ pub struct BlockingAlertDialog<'a> {
 
 #[derive(Debug, Clone)]
 pub struct BlockingConfirmDialog<'a> {
-    pub window: Option<WindowHandle<'a>>,
+    pub window: WindowHandle<'a>,
     pub title: &'a str,
     pub message: &'a str,
     pub level: BlockingDialogLevel,
@@ -49,7 +51,7 @@ pub struct BlockingPickFilesDialogFilter<'a> {
 
 #[derive(Debug, Clone)]
 pub struct BlockingPickFilesDialog<'a> {
-    pub window: Option<WindowHandle<'a>>,
+    pub window: WindowHandle<'a>,
     pub title: &'a str,
     pub multiple: bool,
     pub filter: &'a [BlockingPickFilesDialogFilter<'a>],

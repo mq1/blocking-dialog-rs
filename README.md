@@ -10,4 +10,3 @@ Minimal desktop dialog implementation (wip)
 - No async
 - Few dependencies
 - Simple api
-- CLI and rust library interfaces

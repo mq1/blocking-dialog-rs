@@ -59,25 +59,23 @@ impl<'a> BlockingConfirmDialog<'a> {
             unsafe { ns_alert.setIcon(Some(icon.as_ref())) }
         }
 
-        let resp = if let Some(window) = &self.window
-            && let RawWindowHandle::AppKit(handle) = window.as_raw()
-        {
-            let (tx, rx) = mpsc::channel();
-            let handler = StackBlock::new(move |resp| {
-                let _ = tx.send(resp);
-            });
-            let handler = handler.copy();
-
-            let ns_view = handle.ns_view.as_ptr();
-            let ns_view = unsafe { Retained::from_raw(ns_view as *mut NSView) }.unwrap();
-            let ns_window = ns_view.window().unwrap();
-
-            ns_alert.beginSheetModalForWindow_completionHandler(&ns_window, Some(&handler));
-
-            rx.recv().unwrap()
-        } else {
-            ns_alert.runModal()
+        let RawWindowHandle::AppKit(handle) = self.window.as_raw() else {
+            return Err(BlockingDialogError::UnsupportedWindowingSystem);
         };
+
+        let (tx, rx) = mpsc::channel();
+        let handler = StackBlock::new(move |resp| {
+            let _ = tx.send(resp);
+        });
+        let handler = handler.copy();
+
+        let ns_view = handle.ns_view.as_ptr();
+        let ns_view = unsafe { Retained::from_raw(ns_view as *mut NSView) }.unwrap();
+        let ns_window = ns_view.window().unwrap();
+
+        ns_alert.beginSheetModalForWindow_completionHandler(&ns_window, Some(&handler));
+
+        let resp = rx.recv().unwrap();
 
         Ok(resp == NSAlertSecondButtonReturn)
     }

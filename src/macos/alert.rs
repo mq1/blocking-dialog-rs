@@ -52,17 +52,15 @@ impl<'a> BlockingAlertDialog<'a> {
             unsafe { ns_alert.setIcon(Some(icon.as_ref())) }
         }
 
-        if let Some(window) = &self.window
-            && let RawWindowHandle::AppKit(handle) = window.as_raw()
-        {
-            let ns_view = handle.ns_view.as_ptr();
-            let ns_view = unsafe { Retained::from_raw(ns_view as *mut NSView) }.unwrap();
-            let ns_window = ns_view.window().unwrap();
+        let RawWindowHandle::AppKit(handle) = self.window.as_raw() else {
+            return Err(BlockingDialogError::UnsupportedWindowingSystem);
+        };
 
-            ns_alert.beginSheetModalForWindow_completionHandler(&ns_window, None);
-        } else {
-            let _ = ns_alert.runModal();
-        }
+        let ns_view = handle.ns_view.as_ptr();
+        let ns_view = unsafe { Retained::from_raw(ns_view as *mut NSView) }.unwrap();
+        let ns_window = ns_view.window().unwrap();
+
+        ns_alert.beginSheetModalForWindow_completionHandler(&ns_window, None);
 
         Ok(())
     }

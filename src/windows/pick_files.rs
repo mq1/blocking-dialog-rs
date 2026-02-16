@@ -61,13 +61,11 @@ impl<'a> BlockingPickFilesDialog<'a> {
         let title_wide = widen(self.title);
         let filter_wide = get_filter_utf16(&self.filter);
 
-        let hwnd = if let Some(handle) = self.window
-            && let RawWindowHandle::Win32(handle) = handle.as_raw()
-        {
-            HWND(handle.hwnd.get() as *mut _)
-        } else {
-            HWND(std::ptr::null_mut())
+        let RawWindowHandle::Win32(handle) = self.window.as_raw() else {
+            return Err(BlockingDialogError::UnsupportedWindowingSystem);
         };
+
+        let hwnd = HWND(handle.hwnd.get() as *mut _);
 
         let mut file_buffer = vec![0u16, 32_768];
 

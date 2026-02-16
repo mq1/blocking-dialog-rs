@@ -24,19 +24,16 @@ impl<'a> BlockingConfirmDialog<'a> {
         let title_wide = widen(self.title);
         let message_wide = widen(self.message);
 
-        let hwnd = if let Some(handle) = self.window
-            && let RawWindowHandle::Win32(handle) = handle.as_raw()
-        {
-            Some(HWND(handle.hwnd.get() as *mut _))
-        } else {
-            None
+        let RawWindowHandle::Win32(handle) = self.window.as_raw() else {
+            return Err(BlockingDialogError::UnsupportedWindowingSystem);
         };
 
+        let hwnd = HWND(handle.hwnd.get() as *mut _);
         let utype = get_utype(self.level);
 
         let yes = unsafe {
             let res = MessageBoxW(
-                hwnd,
+                Some(hwnd),
                 PCWSTR(message_wide.as_ptr()),
                 PCWSTR(title_wide.as_ptr()),
                 utype,

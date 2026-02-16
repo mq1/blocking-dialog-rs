@@ -1,6 +1,6 @@
 [package]
 name = "blocking-dialog"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2024"
 rust-version = "1.88"
 authors = ["Manuel Quarneti <mq1@ik.me>"]
@@ -9,14 +9,9 @@ repository = "https://github.com/mq1/blocking-dialog-rs"
 homepage = "https://github.com/mq1/blocking-dialog-rs"
 description = "Minimal desktop dialog implementation"
 
-[features]
-default = []
-cli = ["dep:lexopt"]
-
 [dependencies]
 thiserror = "2.0"
 raw-window-handle = "0.6"
-lexopt = { version = "0.3", optional = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 block2 = "0.6"
