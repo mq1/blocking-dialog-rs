@@ -22,6 +22,11 @@ OPTIONS:
     -a, --alert            Show an alert dialog (default)
     -c, --confirm          Show a confirmation dialog
     -h, --help             Print this help message
+
+EXAMPLES:
+    blocking-dialog \"Hello world\"
+    blocking-dialog -et \"An error\" \"Hello world\"
+    blocking-dialog -ct \"A confirmation\" \"Hello world\"
 ";
 
 #[cfg(feature = "cli")]
