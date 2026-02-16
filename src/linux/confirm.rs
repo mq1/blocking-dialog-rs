@@ -14,6 +14,6 @@ impl<'a> BlockingConfirmDialog<'a> {
             .arg(self.message)
             .status()?;
 
-        status.success()
+        Ok(status.success())
     }
 }
