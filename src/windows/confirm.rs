@@ -2,11 +2,12 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::widen;
-use crate::{BlockingAlertDialog, BlockingDialogError, BlockingDialogLevel};
+use crate::{BlockingConfirmDialog, BlockingDialogError, BlockingDialogLevel};
 use raw_window_handle::RawWindowHandle;
 use windows::Win32::Foundation::HWND;
 use windows::Win32::UI::WindowsAndMessaging::{
-    MB_ICONERROR, MB_ICONINFORMATION, MB_ICONWARNING, MB_OKCANCEL, MESSAGEBOX_STYLE, MessageBoxW,
+    MB_ICONERROR, MB_ICONINFORMATION, MB_ICONWARNING, MB_OKCANCEL, MESSAGEBOX_RESULT,
+    MESSAGEBOX_STYLE, MessageBoxW,
 };
 use windows::core::PCWSTR;
 
@@ -41,7 +42,7 @@ impl<'a> BlockingConfirmDialog<'a> {
                 utype,
             );
 
-            res == 1
+            res == MESSAGEBOX_RESULT(1)
         };
 
         Ok(yes)
