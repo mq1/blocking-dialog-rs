@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 impl<'a> BlockingPickFileDialog<'a> {
-    pub fn show(&self) -> Result<PathBuf, BlockingDialogError> {
+    pub fn show(&self) -> Result<Option<PathBuf>, BlockingDialogError> {
         let mut args = vec!["--file-selection", "--title", self.title];
 
         if self.directory {
@@ -21,6 +21,10 @@ impl<'a> BlockingPickFileDialog<'a> {
         let stdout = String::from_utf8_lossy(&output.stdout);
         let trimmed = stdout.trim();
 
-        Ok(PathBuf::from(trimmed))
+        if trimmed.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(PathBuf::from(trimmed)))
+        }
     }
 }
