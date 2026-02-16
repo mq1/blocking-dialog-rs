@@ -6,9 +6,8 @@
 #[cfg_attr(target_os = "windows", path = "windows/mod.rs")]
 mod os_dialog;
 
-use std::process::ExitStatus;
-
 use raw_window_handle::WindowHandle;
+use std::process::ExitStatus;
 use thiserror::Error;
 
 #[derive(Error, Debug, Clone, Copy)]
