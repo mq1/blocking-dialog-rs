@@ -33,6 +33,7 @@ EXAMPLES:
 enum DialogKind {
     Alert,
     Confirm,
+    PickFiles,
 }
 
 #[cfg(feature = "cli")]
@@ -41,6 +42,7 @@ struct Args {
     title: String,
     message: String,
     dialog_kind: DialogKind,
+    multiple: bool,
 }
 
 #[cfg(feature = "cli")]
@@ -51,6 +53,7 @@ fn parse_args() -> Result<Args, lexopt::Error> {
     let mut title = "BlockingDialog".to_string();
     let mut message = String::new();
     let mut dialog_kind = DialogKind::Alert;
+    let mut multiple = false;
 
     let mut parser = lexopt::Parser::from_env();
     while let Some(arg) = parser.next()? {
@@ -76,6 +79,12 @@ fn parse_args() -> Result<Args, lexopt::Error> {
             Short('a') | Long("alert") => {
                 dialog_kind = DialogKind::Alert;
             }
+            Short('f') | Long("pick-files") => {
+                dialog_kind = DialogKind::PickFiles;
+            }
+            Short('m') | Long("multiple") => {
+                multiple = true;
+            }
             Short('h') | Long("help") => {
                 println!("{HELP}");
                 std::process::exit(0);
@@ -89,6 +98,7 @@ fn parse_args() -> Result<Args, lexopt::Error> {
         title,
         message,
         dialog_kind,
+        multiple,
     })
 }
 
@@ -119,6 +129,16 @@ fn main() -> Result<(), lexopt::Error> {
 
             let result = dialog.show().expect("Failed to show dialog");
             println!("{}", result);
+        }
+        DialogKind::PickFiles => {
+            let dialog = blocking_dialog::BlockingPickFilesDialog {
+                window: None,
+                title: &args.title,
+                multiple: false,
+                filter: &[],
+            };
+            let result = dialog.show().expect("Failed to show dialog");
+            println!("{:?}", result);
         }
     }
 
