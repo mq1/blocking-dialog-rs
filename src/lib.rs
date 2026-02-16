@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 Manuel Quarneti <mq1@ik.me>
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-#[cfg_attr(target_os = "macos", path = "macos.rs")]
-#[cfg_attr(target_os = "linux", path = "linux.rs")]
-#[cfg_attr(target_os = "windows", path = "windows.rs")]
+#[cfg_attr(target_os = "macos", path = "macos/mod.rs")]
+#[cfg_attr(target_os = "linux", path = "linux/mod.rs")]
+#[cfg_attr(target_os = "windows", path = "windows/mod.rs")]
 mod os_dialog;
 
 use raw_window_handle::WindowHandle;
