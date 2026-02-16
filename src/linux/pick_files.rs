@@ -7,24 +7,20 @@ use std::process::Command;
 
 impl<'a> BlockingPickFileDialog<'a> {
     pub fn show(&self) -> Result<PathBuf, BlockingDialogError> {
-        let cmd = Command::new("zenity")
-            .arg("--file-selection")
-            .arg("--title")
-            .arg(self.title);
+        let mut args = vec!["--file-selection", "--title", self.title];
 
-        let cmd = match self.directory {
-            true => cmd.arg("--directory"),
-            false => cmd,
-        };
+        if self.directory {
+            args.push("--directory");
+        }
 
-        let cmd = match self.multiple {
-            true => cmd.arg("--multiple"),
-            false => cmd,
-        };
+        if self.multiple {
+            args.push("--multiple");
+        }
 
-        let output = cmd.output()?;
+        let output = Command::new("zenity").args(args).output()?;
         let stdout = String::from_utf8_lossy(&output.stdout);
         let trimmed = stdout.trim();
+
         Ok(PathBuf::from(trimmed))
     }
 }
