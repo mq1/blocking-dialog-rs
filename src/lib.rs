@@ -40,3 +40,11 @@ pub struct BlockingConfirmDialog<'a> {
     pub message: &'a str,
     pub level: BlockingDialogLevel,
 }
+
+#[derive(Debug, Clone)]
+pub struct BlockingPickFileDialog<'a> {
+    pub window: Option<WindowHandle<'a>>,
+    pub title: &'a str,
+    pub directory: bool,
+    pub multiple: bool,
+}

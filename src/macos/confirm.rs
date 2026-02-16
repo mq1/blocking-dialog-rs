@@ -1,8 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Manuel Quarneti <mq1@ik.me>
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use std::sync::mpsc;
-
 use crate::{BlockingConfirmDialog, BlockingDialogError, BlockingDialogLevel};
 use block2::StackBlock;
 use objc2::{MainThreadMarker, rc::Retained};
@@ -11,6 +9,7 @@ use objc2_app_kit::{
 };
 use objc2_foundation::{NSString, ns_string};
 use raw_window_handle::RawWindowHandle;
+use std::sync::mpsc;
 
 fn get_ns_alert_style(level: BlockingDialogLevel) -> NSAlertStyle {
     match level {
