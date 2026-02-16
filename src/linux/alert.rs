@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use crate::{BlockingAlertDialog, BlockingDialogError, BlockingDialogLevel};
-use raw_window_handle::RawWindowHandle;
+use std::process::Command;
 
 fn get_level_flag(level: BlockingDialogLevel) -> &'static str {
     match level {
