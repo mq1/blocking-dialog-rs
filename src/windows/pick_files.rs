@@ -1,12 +1,15 @@
 // SPDX-FileCopyrightText: 2026 Manuel Quarneti <mq1@ik.me>
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
+use super::widen;
 use crate::{BlockingDialogError, BlockingPickFilesDialog, BlockingPickFilesDialogFilter};
+use raw_window_handle::RawWindowHandle;
 use std::path::PathBuf;
 use windows::Win32::Foundation::HWND;
 use windows::{
     Win32::UI::Controls::Dialogs::{
-        GetOpenFileNameW, OFN_ALLOWMULTISELECT, OFN_FILEMUSTEXIST, OFN_PATHMUSTEXIST, OPENFILENAMEW,
+        GetOpenFileNameW, OFN_ALLOWMULTISELECT, OFN_EXPLORER, OFN_FILEMUSTEXIST, OFN_PATHMUSTEXIST,
+        OPENFILENAMEW,
     },
     core::{PCWSTR, PWSTR},
 };
@@ -56,13 +59,14 @@ fn parse_multi_select(buffer: &[u16]) -> Vec<PathBuf> {
 impl<'a> BlockingPickFilesDialog<'a> {
     pub fn show(&self) -> Result<Vec<PathBuf>, BlockingDialogError> {
         let title_wide = widen(self.title);
+        let filter_wide = get_filter_utf16(&self.filter);
 
         let hwnd = if let Some(handle) = self.window
             && let RawWindowHandle::Win32(handle) = handle.as_raw()
         {
             HWND(handle.hwnd.get() as *mut _)
         } else {
-            HWND(0)
+            HWND(std::ptr::null_mut())
         };
 
         let mut file_buffer = vec![0u16, 32_768];
@@ -76,7 +80,7 @@ impl<'a> BlockingPickFilesDialog<'a> {
             let mut ofn = OPENFILENAMEW {
                 lStructSize: std::mem::size_of::<OPENFILENAMEW>() as u32,
                 hwndOwner: hwnd,
-                lpstrFilter: PCWSTR(filters_wide.as_ptr()),
+                lpstrFilter: PCWSTR(filter_wide.as_ptr()),
                 lpstrFile: PWSTR(file_buffer.as_mut_ptr()),
                 nMaxFile: file_buffer.len() as u32,
                 lpstrTitle: PCWSTR(title_wide.as_ptr()),
