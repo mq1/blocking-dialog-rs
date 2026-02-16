@@ -21,6 +21,7 @@ dependencies = [
 name = "blocking-dialog"
 version = "0.0.1"
 dependencies = [
+ "block2",
  "lexopt",
  "objc2",
  "objc2-app-kit",

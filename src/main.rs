@@ -19,24 +19,23 @@ OPTIONS:
     -i, --info             Show an information dialog (default)
     -w, --warning          Show a warning dialog
     -e, --error            Show an error dialog
+    -a, --alert            Show an alert dialog (default)
+    -c, --confirm          Show a confirmation dialog
     -h, --help             Print this help message
-
-EXAMPLES:
-    # Show a basic info dialog
-    blocking-dialog \"Hello, World!\"
-
-    # Show an error dialog with custom title
-    blocking-dialog --error --title \"Error\" \"Something went wrong!\"
-
-    # Show a warning dialog
-    blocking-dialog -w -t \"Warning\" \"Proceed with caution\"\
 ";
+
+#[cfg(feature = "cli")]
+enum DialogKind {
+    Alert,
+    Confirm,
+}
 
 #[cfg(feature = "cli")]
 struct Args {
     level: BlockingDialogLevel,
     title: String,
     message: String,
+    dialog_kind: DialogKind,
 }
 
 #[cfg(feature = "cli")]
@@ -46,6 +45,7 @@ fn parse_args() -> Result<Args, lexopt::Error> {
     let mut level = BlockingDialogLevel::Info;
     let mut title = "BlockingDialog".to_string();
     let mut message = String::new();
+    let mut dialog_kind = DialogKind::Alert;
 
     let mut parser = lexopt::Parser::from_env();
     while let Some(arg) = parser.next()? {
@@ -65,6 +65,12 @@ fn parse_args() -> Result<Args, lexopt::Error> {
             Short('e') | Long("error") => {
                 level = BlockingDialogLevel::Error;
             }
+            Short('c') | Long("confirm") => {
+                dialog_kind = DialogKind::Confirm;
+            }
+            Short('a') | Long("alert") => {
+                dialog_kind = DialogKind::Alert;
+            }
             Short('h') | Long("help") => {
                 println!("{HELP}");
                 std::process::exit(0);
@@ -77,6 +83,7 @@ fn parse_args() -> Result<Args, lexopt::Error> {
         level,
         title,
         message,
+        dialog_kind,
     })
 }
 
@@ -86,14 +93,29 @@ fn main() -> Result<(), lexopt::Error> {
 
     let args = parse_args()?;
 
-    let dialog = BlockingAlertDialog {
-        window: None,
-        title: &args.title,
-        message: &args.message,
-        level: args.level,
-    };
+    match args.dialog_kind {
+        DialogKind::Alert => {
+            let dialog = BlockingAlertDialog {
+                window: None,
+                title: &args.title,
+                message: &args.message,
+                level: args.level,
+            };
 
-    dialog.show().expect("Failed to show dialog");
+            dialog.show().expect("Failed to show dialog");
+        }
+        DialogKind::Confirm => {
+            let dialog = blocking_dialog::BlockingConfirmDialog {
+                window: None,
+                title: &args.title,
+                message: &args.message,
+                level: args.level,
+            };
+
+            let result = dialog.show().expect("Failed to show dialog");
+            println!("{}", result);
+        }
+    }
 
     Ok(())
 }
