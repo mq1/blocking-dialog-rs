@@ -7,7 +7,7 @@ authors = ["Manuel Quarneti <mq1@ik.me>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/mq1/blocking-dialog-rs"
 homepage = "https://github.com/mq1/blocking-dialog-rs"
-description = "minimal file dialog implementation"
+description = "Minimal desktop dialog implementation"
 
 [features]
 default = []

@@ -1,12 +1,13 @@
 # blocking-dialog-rs
 
-Minimal file dialog implementation (wip)
+Minimal desktop dialog implementation (wip)
 
 ### Goals and non-goals
 
-- Windows XP+ compatibility
+- Windows XP+ support
+- macOS support
+- linux support using zenity (part of the freedesktop runtime on flathub)
 - No async
 - Few dependencies
 - Simple api
-- Targeting only zenity on linux (part of the freedesktop runtime on flathub)
 - CLI and rust library interfaces
