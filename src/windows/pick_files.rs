@@ -1,17 +1,17 @@
 // SPDX-FileCopyrightText: 2026 Manuel Quarneti <mq1@ik.me>
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use crate::{BlockingDialogError, BlockingPickFileDialog, BlockingPickFileDialogFilter};
+use crate::{BlockingDialogError, BlockingPickFilesDialog, BlockingPickFilesDialogFilter};
 use std::path::PathBuf;
 use windows::Win32::Foundation::HWND;
 use windows::{
     Win32::UI::Controls::Dialogs::{
-        GetOpenFileNameW, OFN_FILEMUSTEXIST, OFN_PATHMUSTEXIST, OPENFILENAMEW,
+        GetOpenFileNameW, OFN_ALLOWMULTISELECT, OFN_FILEMUSTEXIST, OFN_PATHMUSTEXIST, OPENFILENAMEW,
     },
     core::{PCWSTR, PWSTR},
 };
 
-fn get_filter_utf16(filter: &[BlockingPickFileDialogFilter]) -> Vec<u16> {
+fn get_filter_utf16(filter: &[BlockingPickFilesDialogFilter]) -> Vec<u16> {
     let mut s = String::new();
 
     for entry in filters {
@@ -32,10 +32,30 @@ fn get_filter_utf16(filter: &[BlockingPickFileDialogFilter]) -> Vec<u16> {
     widen(s)
 }
 
-impl<'a> BlockingPickFileDialog<'a> {
-    pub fn show(&self) -> Result<Option<PathBuf>, BlockingDialogError> {
+fn parse_multi_select(buffer: &[u16]) -> Vec<PathBuf> {
+    let parts: Vec<String> = buffer
+        .split(|c| *c == 0)
+        .filter(|s| !s.is_empty())
+        .map(|s| String::from_utf16_lossy(s))
+        .collect();
+
+    if parts.is_empty() {
+        return vec![];
+    }
+
+    // Single file selected
+    if parts.len() == 1 {
+        return vec![PathBuf::from(&parts[0])];
+    }
+
+    // Multi-select: first part is directory, rest are filenames
+    let dir = PathBuf::from(&parts[0]);
+    parts[1..].iter().map(|f| dir.join(f)).collect()
+}
+
+impl<'a> BlockingPickFilesDialog<'a> {
+    pub fn show(&self) -> Result<Vec<PathBuf>, BlockingDialogError> {
         let title_wide = widen(self.title);
-        let message_wide = widen(self.message);
 
         let hwnd = if let Some(handle) = self.window
             && let RawWindowHandle::Win32(handle) = handle.as_raw()
@@ -45,7 +65,12 @@ impl<'a> BlockingPickFileDialog<'a> {
             HWND(0)
         };
 
-        let mut file_buffer = [0u16; 260];
+        let mut file_buffer = vec![0u16, 32_768];
+
+        let mut flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_EXPLORER;
+        if self.multiple {
+            flags |= OFN_ALLOWMULTISELECT;
+        }
 
         let yes = unsafe {
             let mut ofn = OPENFILENAMEW {
@@ -55,7 +80,7 @@ impl<'a> BlockingPickFileDialog<'a> {
                 lpstrFile: PWSTR(file_buffer.as_mut_ptr()),
                 nMaxFile: file_buffer.len() as u32,
                 lpstrTitle: PCWSTR(title_wide.as_ptr()),
-                Flags: OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST,
+                Flags: flags,
                 ..Default::default()
             };
 
@@ -63,10 +88,9 @@ impl<'a> BlockingPickFileDialog<'a> {
         };
 
         if yes {
-            let path = unwiden(&file_buffer);
-            Ok(Some(PathBuf::from(path)))
+            Ok(parse_multi_select(&file_buffer))
         } else {
-            Ok(None)
+            Ok(Vec::new())
         }
     }
 }

@@ -1,12 +1,16 @@
 // SPDX-FileCopyrightText: 2026 Manuel Quarneti <mq1@ik.me>
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use crate::{BlockingDialogError, BlockingPickFileDialog};
+use crate::{BlockingDialogError, BlockingPickFilesDialog};
 use std::path::PathBuf;
 use std::process::Command;
 
-impl<'a> BlockingPickFileDialog<'a> {
-    pub fn show(&self) -> Result<Option<PathBuf>, BlockingDialogError> {
+fn parse_multi_select(raw: &str) -> Vec<PathBuf> {
+    raw.split('|').map(PathBuf::from)
+}
+
+impl<'a> BlockingPickFilesDialog<'a> {
+    pub fn show(&self) -> Result<Vec<PathBuf>, BlockingDialogError> {
         let mut args = vec!["--file-selection", "--title", self.title];
 
         if self.directory {
@@ -22,9 +26,9 @@ impl<'a> BlockingPickFileDialog<'a> {
         let trimmed = stdout.trim();
 
         if trimmed.is_empty() {
-            Ok(None)
+            Ok(Vec::new())
         } else {
-            Ok(Some(PathBuf::from(trimmed)))
+            Ok(parse_multi_select(trimmed))
         }
     }
 }
