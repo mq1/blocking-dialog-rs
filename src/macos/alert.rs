@@ -49,8 +49,7 @@ impl<'a> BlockingAlertDialog<'a> {
         ns_alert.setAlertStyle(style);
 
         if let Some(icon) = icon {
-            let icon = icon.downcast_ref();
-            unsafe { ns_alert.setIcon(icon) }
+            unsafe { ns_alert.setIcon(Some(icon.as_ref())) }
         }
 
         if let Some(window) = &self.window

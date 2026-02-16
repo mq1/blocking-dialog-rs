@@ -3,3 +3,4 @@
 
 pub mod alert;
 pub mod confirm;
+pub mod pick_files;

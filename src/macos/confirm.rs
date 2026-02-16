@@ -56,8 +56,7 @@ impl<'a> BlockingConfirmDialog<'a> {
         ok_btn.setTintProminence(NSTintProminence::Primary);
 
         if let Some(icon) = icon {
-            let icon = icon.downcast_ref();
-            unsafe { ns_alert.setIcon(icon) }
+            unsafe { ns_alert.setIcon(Some(icon.as_ref())) }
         }
 
         let resp = if let Some(window) = &self.window
