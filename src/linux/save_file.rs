@@ -11,16 +11,12 @@ fn get_kdialog_filter(filter: &[BlockingPickFilesDialogFilter]) -> String {
     filter
         .iter()
         .map(|entry| {
-            format!(
-                "{} ({})",
-                entry.name,
-                entry
-                    .extensions
-                    .iter()
-                    .map(|ext| format!("*.{ext}"))
-                    .collect::<Vec<_>>()
-                    .join(" "),
-            )
+            entry
+                .extensions
+                .iter()
+                .map(|ext| format!("*.{ext}"))
+                .collect::<Vec<_>>()
+                .join(" ")
         })
         .collect::<Vec<_>>()
         .join(" ")
@@ -38,7 +34,7 @@ impl<'a, W: HasWindowHandle> BlockingSaveFileDialog<'a, W> {
             }
 
             if !self.filter.is_empty() {
-                args.push(":label1");
+                args.push("");
                 args.push(&filter);
             }
 
