@@ -1,6 +1,6 @@
 [package]
 name = "blocking-dialog"
-version = "0.0.5"
+version = "0.0.6"
 edition = "2024"
 rust-version = "1.88"
 authors = ["Manuel Quarneti <mq1@ik.me>"]
@@ -49,3 +49,6 @@ windows = { version = ">=0.59, <=0.62", features = [
   "Win32_System",
   "Win32_System_Com",
 ] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+native-dialog = "0.9"

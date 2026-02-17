@@ -1,87 +1,35 @@
 // SPDX-FileCopyrightText: 2026 Manuel Quarneti <mq1@ik.me>
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use super::is_kdialog_available;
-use crate::{BlockingDialogError, BlockingPickFilesDialog, BlockingPickFilesDialogFilter};
+use crate::{BlockingDialogError, BlockingPickFilesDialog};
+use native_dialog::DialogBuilder;
 use raw_window_handle::HasWindowHandle;
 use std::path::PathBuf;
-use std::process::Command;
-
-fn parse_multi_select(raw: &str) -> Vec<PathBuf> {
-    raw.lines()
-        .map(|s| s.trim())
-        .filter(|s| !s.is_empty())
-        .map(PathBuf::from)
-        .filter(|p| p.exists())
-        .collect()
-}
-
-fn get_kdialog_filter(filter: &[BlockingPickFilesDialogFilter]) -> String {
-    filter
-        .iter()
-        .map(|entry| {
-            entry
-                .extensions
-                .iter()
-                .map(|ext| format!("*.{ext}"))
-                .collect::<Vec<_>>()
-                .join(" ")
-        })
-        .collect::<Vec<_>>()
-        .join(" ")
-}
 
 impl<'a, W: HasWindowHandle> BlockingPickFilesDialog<'a, W> {
     pub fn show(&self) -> Result<Vec<PathBuf>, BlockingDialogError> {
-        if is_kdialog_available() {
-            let filter = get_kdialog_filter(&self.filter);
+        let mut dialog = DialogBuilder::file()
+            .set_title(self.title)
+            .set_owner(&self.window);
 
-            let mut args = vec!["--getopenfilename", "--title", self.title];
+        for entry in self.filter {
+            dialog = dialog.add_filter(entry.name, entry.extensions);
+        }
 
-            if self.multiple {
-                args.push("--multiple");
-                args.push("--separate-output");
+        if self.multiple {
+            let dialog = dialog.open_multiple_file();
+
+            match dialog.show() {
+                Ok(paths) => Ok(paths),
+                Err(err) => Err(BlockingDialogError::NativeDialog(err)),
             }
-
-            if !self.filter.is_empty() {
-                args.push("");
-                args.push(&filter);
-            }
-
-            let output = Command::new("kdialog").args(args).output()?;
-            let stdout = String::from_utf8_lossy(&output.stdout);
-
-            Ok(parse_multi_select(stdout.as_ref()))
         } else {
-            let mut filter_args = Vec::new();
+            let dialog = dialog.open_single_file();
 
-            for entry in self.filter {
-                let patterns = entry
-                    .extensions
-                    .iter()
-                    .map(|ext| format!("*.{ext}"))
-                    .collect::<Vec<_>>()
-                    .join(" ");
-                filter_args.push(format!("{} | {}", entry.name, patterns));
+            match dialog.show() {
+                Ok(path) => Ok(path.into_iter().collect()),
+                Err(err) => Err(BlockingDialogError::NativeDialog(err)),
             }
-
-            let mut args = vec!["--file-selection", "--title", self.title];
-
-            if self.multiple {
-                args.push("--multiple");
-                args.push("--separator");
-                args.push("\n")
-            }
-
-            for filter_arg in &filter_args {
-                args.push("--file-filter");
-                args.push(filter_arg.as_str());
-            }
-
-            let output = Command::new("zenity").args(args).output()?;
-            let stdout = String::from_utf8_lossy(&output.stdout);
-
-            Ok(parse_multi_select(stdout.as_ref()))
         }
     }
 }

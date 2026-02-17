@@ -20,6 +20,10 @@ pub enum BlockingDialogError {
     Handle(HandleError),
     #[error("Could not initialize COM")]
     CouldNotInitializeCOM,
+
+    #[cfg(target_os = "linux")]
+    #[error("Native dialog error: {0}")]
+    NativeDialog(native_dialog::Error),
 }
 
 #[derive(Debug, Clone, Copy)]

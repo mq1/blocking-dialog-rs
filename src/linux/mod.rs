@@ -6,13 +6,3 @@ pub mod confirm;
 pub mod pick_directory;
 pub mod pick_files;
 pub mod save_file;
-
-use std::process::Command;
-
-pub fn is_kdialog_available() -> bool {
-    Command::new("which")
-        .arg("kdialog")
-        .status()
-        .map(|s| s.success())
-        .unwrap_or(false)
-}
