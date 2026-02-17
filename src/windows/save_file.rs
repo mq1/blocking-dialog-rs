@@ -1,13 +1,15 @@
 // SPDX-FileCopyrightText: 2026 Manuel Quarneti <mq1@ik.me>
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use super::widen;
+use super::{unwiden, widen};
 use crate::{BlockingDialogError, BlockingPickFilesDialogFilter, BlockingSaveFileDialog};
 use raw_window_handle::{HandleError, HasWindowHandle, RawWindowHandle};
 use std::path::PathBuf;
 use windows::Win32::Foundation::HWND;
 use windows::{
-    Win32::UI::Controls::Dialogs::{GetSaveFileNameW, OFN_EXPLORER, OFN_OVERWRITEPROMPT, OPENFILENAMEW},
+    Win32::UI::Controls::Dialogs::{
+        GetSaveFileNameW, OFN_EXPLORER, OFN_OVERWRITEPROMPT, OPENFILENAMEW,
+    },
     core::{PCWSTR, PWSTR},
 };
 
@@ -48,13 +50,11 @@ impl<'a, W: HasWindowHandle> BlockingSaveFileDialog<'a, W> {
 
         let hwnd = HWND(handle.hwnd.get() as *mut _);
 
-        let mut file_buffer = vec![0u16; 4096];
+        let mut file_buffer = [0u16; 260];
 
         // Set default filename if provided
         if let Some(default_filename) = self.default_filename {
-            let default_wide: Vec<u16> = default_filename
-                .encode_utf16()
-                .collect();
+            let default_wide: Vec<u16> = default_filename.encode_utf16().collect();
             file_buffer[..default_wide.len()].copy_from_slice(&default_wide);
         }
 
@@ -74,8 +74,7 @@ impl<'a, W: HasWindowHandle> BlockingSaveFileDialog<'a, W> {
         };
 
         if yes {
-            let end = file_buffer.iter().position(|&c| c == 0).unwrap_or(file_buffer.len());
-            let path = String::from_utf16_lossy(&file_buffer[..end]);
+            let path = unwiden(path);
             Ok(Some(PathBuf::from(path)))
         } else {
             Ok(None)

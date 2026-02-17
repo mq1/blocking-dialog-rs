@@ -18,6 +18,8 @@ pub enum BlockingDialogError {
     Io(#[from] io::Error),
     #[error("Handle error: {0}")]
     Handle(HandleError),
+    #[error("Could not initialize COM")]
+    CouldNotInitializeCOM,
 }
 
 #[derive(Debug, Clone, Copy)]
