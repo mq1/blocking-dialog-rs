@@ -71,6 +71,7 @@ impl<'a, W: HasWindowHandle> BlockingAlertDialog<'a, W> {
         });
 
         ns_alert.beginSheetModalForWindow_completionHandler(&ns_window, Some(&handler));
+        let _ = NSApplication::sharedApplication(mtm).runModalForWindow(&ns_window);
 
         Ok(())
     }

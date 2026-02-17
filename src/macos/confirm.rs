@@ -10,7 +10,6 @@ use objc2_app_kit::{
 };
 use objc2_foundation::{NSString, ns_string};
 use raw_window_handle::{HandleError, HasWindowHandle, RawWindowHandle};
-use std::sync::{Arc, Mutex, mpsc};
 
 fn get_ns_alert_style(level: BlockingDialogLevel) -> NSAlertStyle {
     match level {
