@@ -1,16 +1,10 @@
 // SPDX-FileCopyrightText: 2026 Manuel Quarneti <mq1@ik.me>
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use std::sync::mpsc;
-
 use crate::{BlockingAlertDialog, BlockingDialogError, BlockingDialogLevel};
-use block2::{RcBlock, StackBlock};
-use objc2::rc::autoreleasepool;
-use objc2::{MainThreadMarker, Message, rc::Retained};
-use objc2_app_kit::{
-    NSAlert, NSAlertStyle, NSApplication, NSImage, NSModalResponse, NSStandardKeyBindingResponding,
-    NSView,
-};
+use block2::RcBlock;
+use objc2::{MainThreadMarker, rc::Retained};
+use objc2_app_kit::{NSAlert, NSAlertStyle, NSApplication, NSImage, NSView};
 use objc2_foundation::NSString;
 use raw_window_handle::{HandleError, HasWindowHandle, RawWindowHandle};
 
