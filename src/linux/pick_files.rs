@@ -2,9 +2,8 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use super::is_kdialog_available;
-use crate::{BlockingDialogError, BlockingPickFilesDialog};
+use crate::{BlockingDialogError, BlockingPickFilesDialog, BlockingPickFilesDialogFilter};
 use raw_window_handle::HasWindowHandle;
-use std::fmt::Write;
 use std::path::PathBuf;
 use std::process::Command;
 
