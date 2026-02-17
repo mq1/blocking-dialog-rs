@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use crate::{BlockingDialogError, BlockingPickDirectoryDialog};
-use block2::StackBlock;
+use block2::RcBlock;
 use objc2::{MainThreadMarker, rc::Retained};
-use objc2_app_kit::{NSModalResponseOK, NSOpenPanel, NSView};
+use objc2_app_kit::{NSApplication, NSModalResponseOK, NSOpenPanel, NSView};
 use objc2_foundation::NSString;
 use raw_window_handle::{HandleError, HasWindowHandle, RawWindowHandle};
-use std::{path::PathBuf, sync::mpsc};
+use std::path::PathBuf;
 
 impl<'a, W: HasWindowHandle> BlockingPickDirectoryDialog<'a, W> {
     pub fn show(&self) -> Result<Option<PathBuf>, BlockingDialogError> {
@@ -30,19 +30,16 @@ impl<'a, W: HasWindowHandle> BlockingPickDirectoryDialog<'a, W> {
             return Err(BlockingDialogError::Handle(HandleError::NotSupported));
         };
 
-        let (tx, rx) = mpsc::channel();
-        let handler = StackBlock::new(move |resp| {
-            let _ = tx.send(resp);
+        let handler = RcBlock::new(move |resp| {
+            NSApplication::sharedApplication(mtm).stopModalWithCode(resp);
         });
-        let handler = handler.copy();
 
         let ns_view = w.ns_view.as_ptr();
-        let ns_view = unsafe { Retained::from_raw(ns_view as *mut NSView) }.unwrap();
+        let ns_view = unsafe { Retained::retain_autoreleased(ns_view as *mut NSView) }.unwrap();
         let ns_window = ns_view.window().unwrap();
 
         panel.beginSheetModalForWindow_completionHandler(&ns_window, &handler);
-
-        let resp = rx.recv().unwrap();
+        let resp = NSApplication::sharedApplication(mtm).runModalForWindow(&ns_window);
 
         let mut paths = Vec::new();
 

@@ -53,7 +53,6 @@ impl<'a, W: HasWindowHandle> BlockingSaveFileDialog<'a, W> {
         let handler = RcBlock::new(move |resp| {
             NSApplication::sharedApplication(mtm).stopModalWithCode(resp);
         });
-        let handler = handler.copy();
 
         let ns_view = w.ns_view.as_ptr();
         let ns_view = unsafe { Retained::retain_autoreleased(ns_view as *mut NSView) }.unwrap();
@@ -62,16 +61,14 @@ impl<'a, W: HasWindowHandle> BlockingSaveFileDialog<'a, W> {
         panel.beginSheetModalForWindow_completionHandler(&ns_window, &handler);
         let resp = NSApplication::sharedApplication(mtm).runModalForWindow(&ns_window);
 
-        let mut paths = Vec::new();
-
         if resp == NSModalResponseOK
             && let Some(url) = panel.URL()
             && let Some(path) = url.path()
         {
             let path = path.as_ref() as &NSString;
-            paths.push(PathBuf::from(path.to_string()))
+            Ok(Some(PathBuf::from(path.to_string())))
+        } else {
+            Ok(None)
         }
-
-        Ok(paths.pop())
     }
 }

@@ -71,7 +71,6 @@ impl<'a, W: HasWindowHandle> BlockingConfirmDialog<'a, W> {
         let handler = RcBlock::new(move |resp| {
             NSApplication::sharedApplication(mtm).stopModalWithCode(resp);
         });
-        let handler = handler.copy();
 
         let ns_view = w.ns_view.as_ptr();
         let ns_view = unsafe { Retained::retain_autoreleased(ns_view as *mut NSView) }.unwrap();
