@@ -59,12 +59,29 @@ impl<'a, W: HasWindowHandle> BlockingPickFilesDialog<'a, W> {
                 Ok(vec![PathBuf::from(trimmed)])
             }
         } else {
+            let mut filter_args = Vec::new();
+
+            for entry in &self.filter {
+                let patterns = entry
+                    .extensions
+                    .iter()
+                    .map(|ext| format!("*.{ext}"))
+                    .collect::<Vec<_>>()
+                    .join(" ");
+                filter_args.push(format!("{} | {}", entry.name, patterns));
+            }
+
             let mut args = vec!["--file-selection", "--title", self.title];
 
             if self.multiple {
                 args.push("--multiple");
                 args.push("--separator");
                 args.push("\n")
+            }
+
+            for filter_arg in &filter_args {
+                args.push("--file-filter");
+                args.push(filter_arg.as_str());
             }
 
             let output = Command::new("zenity").args(args).output()?;
