@@ -4,7 +4,9 @@
 [![Documentation](https://docs.rs/blocking-dialog/badge.svg)](https://docs.rs/blocking-dialog)
 ![License](https://img.shields.io/crates/l/blocking-dialog.svg)
 
-Minimal, simple, opinionated desktop dialog implementation
+Minimal, simple, opinionated desktop dialog implementation (wip)
+
+Examples: <https://github.com/mq1/TinyWiiBackupManager/blob/main/src/ui/dialogs.rs>
 
 ### Goals and non-goals
 
