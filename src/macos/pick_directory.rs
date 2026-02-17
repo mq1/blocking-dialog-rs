@@ -6,10 +6,10 @@ use block2::StackBlock;
 use objc2::{MainThreadMarker, rc::Retained};
 use objc2_app_kit::{NSModalResponseOK, NSOpenPanel, NSView};
 use objc2_foundation::NSString;
-use raw_window_handle::RawWindowHandle;
+use raw_window_handle::{HandleError, HasWindowHandle, RawWindowHandle};
 use std::{path::PathBuf, sync::mpsc};
 
-impl<'a> BlockingPickDirectoryDialog<'a> {
+impl<'a, W: HasWindowHandle> BlockingPickDirectoryDialog<'a, W> {
     pub fn show(&self) -> Result<Option<PathBuf>, BlockingDialogError> {
         let Some(mtm) = MainThreadMarker::new() else {
             return Err(BlockingDialogError::NotOnMainThread);
@@ -21,8 +21,13 @@ impl<'a> BlockingPickDirectoryDialog<'a> {
         panel.setCanChooseDirectories(true);
         panel.setAllowsMultipleSelection(false);
 
-        let RawWindowHandle::AppKit(handle) = self.window.as_raw() else {
-            return Err(BlockingDialogError::UnsupportedWindowingSystem);
+        let w = match self.window.window_handle() {
+            Ok(w) => w,
+            Err(err) => return Err(BlockingDialogError::Handle(err)),
+        };
+
+        let RawWindowHandle::AppKit(w) = w.as_raw() else {
+            return Err(BlockingDialogError::Handle(HandleError::NotSupported));
         };
 
         let (tx, rx) = mpsc::channel();
@@ -31,7 +36,7 @@ impl<'a> BlockingPickDirectoryDialog<'a> {
         });
         let handler = handler.copy();
 
-        let ns_view = handle.ns_view.as_ptr();
+        let ns_view = w.ns_view.as_ptr();
         let ns_view = unsafe { Retained::from_raw(ns_view as *mut NSView) }.unwrap();
         let ns_window = ns_view.window().unwrap();
 

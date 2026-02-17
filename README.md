@@ -6,7 +6,7 @@ Minimal desktop dialog implementation (wip)
 
 - Windows XP+ support
 - macOS support
-- linux support using zenity (part of the freedesktop runtime on flathub)
+- Wayland/X11 support via Zenity or KDialog
 - No async
 - Few dependencies
 - Simple api

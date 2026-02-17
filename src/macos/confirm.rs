@@ -8,7 +8,7 @@ use objc2_app_kit::{
     NSAlert, NSAlertSecondButtonReturn, NSAlertStyle, NSImage, NSTintProminence, NSView,
 };
 use objc2_foundation::{NSString, ns_string};
-use raw_window_handle::RawWindowHandle;
+use raw_window_handle::{HandleError, HasWindowHandle, RawWindowHandle};
 use std::sync::mpsc;
 
 fn get_ns_alert_style(level: BlockingDialogLevel) -> NSAlertStyle {
@@ -38,7 +38,7 @@ fn get_ns_alert_icon(level: BlockingDialogLevel) -> Option<Retained<NSImage>> {
     }
 }
 
-impl<'a> BlockingConfirmDialog<'a> {
+impl<'a, W: HasWindowHandle> BlockingConfirmDialog<'a, W> {
     pub fn show(&self) -> Result<bool, BlockingDialogError> {
         let Some(mtm) = MainThreadMarker::new() else {
             return Err(BlockingDialogError::NotOnMainThread);
@@ -59,8 +59,13 @@ impl<'a> BlockingConfirmDialog<'a> {
             unsafe { ns_alert.setIcon(Some(icon.as_ref())) }
         }
 
-        let RawWindowHandle::AppKit(handle) = self.window.as_raw() else {
-            return Err(BlockingDialogError::UnsupportedWindowingSystem);
+        let w = match self.window.window_handle() {
+            Ok(w) => w,
+            Err(err) => return Err(BlockingDialogError::Handle(err)),
+        };
+
+        let RawWindowHandle::AppKit(w) = w.as_raw() else {
+            return Err(BlockingDialogError::Handle(HandleError::NotSupported));
         };
 
         let (tx, rx) = mpsc::channel();
@@ -69,7 +74,7 @@ impl<'a> BlockingConfirmDialog<'a> {
         });
         let handler = handler.copy();
 
-        let ns_view = handle.ns_view.as_ptr();
+        let ns_view = w.ns_view.as_ptr();
         let ns_view = unsafe { Retained::from_raw(ns_view as *mut NSView) }.unwrap();
         let ns_window = ns_view.window().unwrap();
 

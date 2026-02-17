@@ -7,7 +7,7 @@ use objc2::{MainThreadMarker, rc::Retained};
 use objc2_app_kit::{NSModalResponseOK, NSOpenPanel, NSView};
 use objc2_foundation::{NSArray, NSString};
 use objc2_uniform_type_identifiers::UTType;
-use raw_window_handle::RawWindowHandle;
+use raw_window_handle::{HandleError, HasWindowHandle, RawWindowHandle};
 use std::{path::PathBuf, sync::mpsc};
 
 fn get_filter(filter: &[BlockingPickFilesDialogFilter]) -> Retained<NSArray<UTType>> {
@@ -26,7 +26,7 @@ fn get_filter(filter: &[BlockingPickFilesDialogFilter]) -> Retained<NSArray<UTTy
     NSArray::from_retained_slice(vec.as_slice())
 }
 
-impl<'a> BlockingPickFilesDialog<'a> {
+impl<'a, W: HasWindowHandle> BlockingPickFilesDialog<'a, W> {
     pub fn show(&self) -> Result<Vec<PathBuf>, BlockingDialogError> {
         let Some(mtm) = MainThreadMarker::new() else {
             return Err(BlockingDialogError::NotOnMainThread);
@@ -39,8 +39,13 @@ impl<'a> BlockingPickFilesDialog<'a> {
         panel.setAllowsMultipleSelection(self.multiple);
         panel.setAllowedContentTypes(&get_filter(self.filter));
 
-        let RawWindowHandle::AppKit(handle) = self.window.as_raw() else {
-            return Err(BlockingDialogError::UnsupportedWindowingSystem);
+        let w = match self.window.window_handle() {
+            Ok(w) => w,
+            Err(err) => return Err(BlockingDialogError::Handle(err)),
+        };
+
+        let RawWindowHandle::AppKit(w) = w.as_raw() else {
+            return Err(BlockingDialogError::Handle(HandleError::NotSupported));
         };
 
         let (tx, rx) = mpsc::channel();
@@ -49,7 +54,7 @@ impl<'a> BlockingPickFilesDialog<'a> {
         });
         let handler = handler.copy();
 
-        let ns_view = handle.ns_view.as_ptr();
+        let ns_view = w.ns_view.as_ptr();
         let ns_view = unsafe { Retained::from_raw(ns_view as *mut NSView) }.unwrap();
         let ns_window = ns_view.window().unwrap();
 

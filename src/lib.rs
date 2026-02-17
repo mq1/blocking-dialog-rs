@@ -6,7 +6,7 @@
 #[cfg_attr(target_os = "windows", path = "windows/mod.rs")]
 mod os_dialog;
 
-use raw_window_handle::WindowHandle;
+use raw_window_handle::{HandleError, HasWindowHandle};
 use std::io;
 use thiserror::Error;
 
@@ -16,8 +16,8 @@ pub enum BlockingDialogError {
     NotOnMainThread,
     #[error("IO error: {0}")]
     Io(#[from] io::Error),
-    #[error("Unsupported windowing system")]
-    UnsupportedWindowingSystem,
+    #[error("Handle error: {0}")]
+    Handle(HandleError),
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -28,16 +28,16 @@ pub enum BlockingDialogLevel {
 }
 
 #[derive(Debug, Clone)]
-pub struct BlockingAlertDialog<'a> {
-    pub window: WindowHandle<'a>,
+pub struct BlockingAlertDialog<'a, W: HasWindowHandle> {
+    pub window: W,
     pub title: &'a str,
     pub message: &'a str,
     pub level: BlockingDialogLevel,
 }
 
 #[derive(Debug, Clone)]
-pub struct BlockingConfirmDialog<'a> {
-    pub window: WindowHandle<'a>,
+pub struct BlockingConfirmDialog<'a, W: HasWindowHandle> {
+    pub window: W,
     pub title: &'a str,
     pub message: &'a str,
     pub level: BlockingDialogLevel,
@@ -50,22 +50,22 @@ pub struct BlockingPickFilesDialogFilter<'a> {
 }
 
 #[derive(Debug, Clone)]
-pub struct BlockingPickFilesDialog<'a> {
-    pub window: WindowHandle<'a>,
+pub struct BlockingPickFilesDialog<'a, W: HasWindowHandle> {
+    pub window: W,
     pub title: &'a str,
     pub multiple: bool,
     pub filter: &'a [BlockingPickFilesDialogFilter<'a>],
 }
 
 #[derive(Debug, Clone)]
-pub struct BlockingPickDirectoryDialog<'a> {
-    pub window: WindowHandle<'a>,
+pub struct BlockingPickDirectoryDialog<'a, W: HasWindowHandle> {
+    pub window: W,
     pub title: &'a str,
 }
 
 #[derive(Debug, Clone)]
-pub struct BlockingSaveFileDialog<'a> {
-    pub window: WindowHandle<'a>,
+pub struct BlockingSaveFileDialog<'a, W: HasWindowHandle> {
+    pub window: W,
     pub title: &'a str,
     pub default_filename: Option<&'a str>,
     pub filter: &'a [BlockingPickFilesDialogFilter<'a>],
