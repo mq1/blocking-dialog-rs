@@ -10,7 +10,7 @@ use windows::Win32::System::Com::CoTaskMemFree;
 use windows::Win32::System::Com::{COINIT_APARTMENTTHREADED, CoInitializeEx, CoUninitialize};
 use windows::Win32::UI::Shell::SHGetPathFromIDListW;
 use windows::Win32::UI::Shell::{
-    BIF_NEWDIALOGSTYLE, BIF_RETURNONLYFSDIRS, BROWSEINFOA, BROWSEINFOW, SHBrowseForFolderW,
+    BIF_NEWDIALOGSTYLE, BIF_RETURNONLYFSDIRS, BROWSEINFOW, SHBrowseForFolderW,
 };
 use windows::core::PCWSTR;
 
@@ -45,7 +45,9 @@ impl<'a, W: HasWindowHandle> BlockingPickDirectoryDialog<'a, W> {
         let pidl = unsafe { SHBrowseForFolderW(&mut browse_info) };
 
         if pidl.is_null() {
-            CoUninitialize();
+            unsafe {
+                CoUninitialize();
+            }
             return Ok(None);
         }
 
