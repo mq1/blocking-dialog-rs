@@ -51,8 +51,8 @@ impl<'a, W: HasWindowHandle> BlockingPickDirectoryDialog<'a, W> {
             return Ok(None);
         }
 
-        let mut path_buffer = [0u16; 260];
-        let success = unsafe { SHGetPathFromIDListW(pidl, PWSTR(path_buffer.as_mut_ptr())) };
+        let mut pszpath = [0u16; 260];
+        let success = unsafe { SHGetPathFromIDListW(pidl, &mut pszpath) };
 
         unsafe {
             CoTaskMemFree(Some(pidl as *const _));
