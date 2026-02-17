@@ -60,7 +60,7 @@ impl<'a, W: HasWindowHandle> BlockingPickDirectoryDialog<'a, W> {
         }
 
         if success.as_bool() {
-            let path = unwiden(path_buffer);
+            let path = unwiden(pszpath);
             Ok(Some(PathBuf::from(path)))
         } else {
             Ok(None)
