@@ -61,7 +61,7 @@ impl<'a, W: HasWindowHandle> BlockingPickFilesDialog<'a, W> {
         } else {
             let mut filter_args = Vec::new();
 
-            for entry in &self.filter {
+            for entry in self.filter {
                 let patterns = entry
                     .extensions
                     .iter()
