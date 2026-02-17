@@ -1,10 +1,19 @@
 // SPDX-FileCopyrightText: 2026 Manuel Quarneti <mq1@ik.me>
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
+use super::is_kdialog_available;
 use crate::{BlockingAlertDialog, BlockingDialogError, BlockingDialogLevel};
 use std::process::Command;
 
-fn get_level_flag(level: BlockingDialogLevel) -> &'static str {
+fn get_kdialog_level_flag(level: BlockingDialogLevel) -> &'static str {
+    match level {
+        BlockingDialogLevel::Info => "--msgbox",
+        BlockingDialogLevel::Warning => "--sorry",
+        BlockingDialogLevel::Error => "--error",
+    }
+}
+
+fn get_zenity_level_flag(level: BlockingDialogLevel) -> &'static str {
     match level {
         BlockingDialogLevel::Info => "--info",
         BlockingDialogLevel::Warning => "--warning",
@@ -14,15 +23,22 @@ fn get_level_flag(level: BlockingDialogLevel) -> &'static str {
 
 impl<'a> BlockingAlertDialog<'a> {
     pub fn show(&self) -> Result<(), BlockingDialogError> {
-        let level_flag = get_level_flag(self.level);
-
-        let _ = Command::new("zenity")
-            .arg(level_flag)
-            .arg("--title")
-            .arg(self.title)
-            .arg("--text")
-            .arg(self.message)
-            .status()?;
+        let _ = if is_kdialog_available() {
+            Command::new("kdialog")
+                .arg("--title")
+                .arg(self.title)
+                .arg(get_kdialog_level_flag(self.level))
+                .arg(self.message)
+                .status()?
+        } else {
+            Command::new("zenity")
+                .arg(get_zenity_level_flag(self.level))
+                .arg("--title")
+                .arg(self.title)
+                .arg("--text")
+                .arg(self.message)
+                .status()?
+        };
 
         Ok(())
     }
