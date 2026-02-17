@@ -42,7 +42,8 @@ impl<'a, W: HasWindowHandle> BlockingPickFilesDialog<'a, W> {
 
             if !self.filter.is_empty() {
                 args.push(":label1");
-                args.push(&get_kdialog_filter(&self.filter));
+                let filter = get_kdialog_filter(&self.filter);
+                args.push(&filter);
             }
 
             let output = Command::new("kdialog").args(args).output()?;
