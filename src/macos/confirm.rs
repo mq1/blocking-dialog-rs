@@ -5,8 +5,7 @@ use crate::{BlockingConfirmDialog, BlockingDialogError, BlockingDialogLevel};
 use block2::RcBlock;
 use objc2::{MainThreadMarker, rc::Retained};
 use objc2_app_kit::{
-    NSAlert, NSAlertSecondButtonReturn, NSAlertStyle, NSApplication, NSImage, NSTintProminence,
-    NSView,
+    NSAlert, NSAlertFirstButtonReturn, NSAlertStyle, NSApplication, NSImage, NSView,
 };
 use objc2_foundation::{NSString, ns_string};
 use raw_window_handle::{HandleError, HasWindowHandle, RawWindowHandle};
@@ -51,9 +50,8 @@ impl<'a, W: HasWindowHandle> BlockingConfirmDialog<'a, W> {
         ns_alert.setMessageText(&NSString::from_str(self.title));
         ns_alert.setInformativeText(&NSString::from_str(self.message));
         ns_alert.setAlertStyle(style);
-        let _cancel_btn = ns_alert.addButtonWithTitle(ns_string!("Cancel"));
-        let ok_btn = ns_alert.addButtonWithTitle(ns_string!("OK"));
-        ok_btn.setTintProminence(NSTintProminence::Primary);
+        let _ = ns_alert.addButtonWithTitle(ns_string!("OK"));
+        let _ = ns_alert.addButtonWithTitle(ns_string!("Cancel"));
 
         if let Some(icon) = icon {
             unsafe { ns_alert.setIcon(Some(icon.as_ref())) }
@@ -79,6 +77,6 @@ impl<'a, W: HasWindowHandle> BlockingConfirmDialog<'a, W> {
         ns_alert.beginSheetModalForWindow_completionHandler(&ns_window, Some(&handler));
         let resp = NSApplication::sharedApplication(mtm).runModalForWindow(&ns_window);
 
-        Ok(resp == NSAlertSecondButtonReturn)
+        Ok(resp == NSAlertFirstButtonReturn)
     }
 }
