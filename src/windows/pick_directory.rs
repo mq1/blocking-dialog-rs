@@ -16,10 +16,8 @@ use windows::core::PCWSTR;
 
 impl<'a, W: HasWindowHandle> BlockingPickDirectoryDialog<'a, W> {
     pub fn show(&self) -> Result<Option<PathBuf>, BlockingDialogError> {
-        unsafe {
-            if CoInitializeEx(None, COINIT_APARTMENTTHREADED).is_err() {
-                return Err(BlockingDialogError::CouldNotInitializeCOM);
-            }
+        if unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED).is_err() } {
+            return Err(BlockingDialogError::CouldNotInitializeCOM);
         }
 
         let w = match self.window.window_handle() {
