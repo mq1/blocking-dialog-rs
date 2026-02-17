@@ -33,6 +33,8 @@ fn get_kdialog_filter(filter: &[BlockingPickFilesDialogFilter]) -> String {
 impl<'a, W: HasWindowHandle> BlockingPickFilesDialog<'a, W> {
     pub fn show(&self) -> Result<Vec<PathBuf>, BlockingDialogError> {
         if is_kdialog_available() {
+            let filter = get_kdialog_filter(&self.filter);
+
             let mut args = vec!["--getopenfilename", "--title", self.title];
 
             if self.multiple {
@@ -42,7 +44,6 @@ impl<'a, W: HasWindowHandle> BlockingPickFilesDialog<'a, W> {
 
             if !self.filter.is_empty() {
                 args.push(":label1");
-                let filter = get_kdialog_filter(&self.filter);
                 args.push(&filter);
             }
 
