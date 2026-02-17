@@ -63,7 +63,7 @@ impl<'a, W: HasWindowHandle> BlockingAlertDialog<'a, W> {
         };
 
         let ns_view = w.ns_view.as_ptr();
-        let ns_view = unsafe { Retained::retain(ns_view as *mut NSView) }.unwrap();
+        let ns_view = unsafe { Retained::retain_autoreleased(ns_view as *mut NSView) }.unwrap();
         let ns_window = ns_view.window().unwrap();
 
         let handler = RcBlock::new(move |_| {

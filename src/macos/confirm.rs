@@ -2,14 +2,15 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use crate::{BlockingConfirmDialog, BlockingDialogError, BlockingDialogLevel};
-use block2::StackBlock;
+use block2::RcBlock;
 use objc2::{MainThreadMarker, rc::Retained};
 use objc2_app_kit::{
-    NSAlert, NSAlertSecondButtonReturn, NSAlertStyle, NSImage, NSTintProminence, NSView,
+    NSAlert, NSAlertSecondButtonReturn, NSAlertStyle, NSApplication, NSImage, NSTintProminence,
+    NSView,
 };
 use objc2_foundation::{NSString, ns_string};
 use raw_window_handle::{HandleError, HasWindowHandle, RawWindowHandle};
-use std::sync::mpsc;
+use std::sync::{Arc, Mutex, mpsc};
 
 fn get_ns_alert_style(level: BlockingDialogLevel) -> NSAlertStyle {
     match level {
@@ -68,19 +69,17 @@ impl<'a, W: HasWindowHandle> BlockingConfirmDialog<'a, W> {
             return Err(BlockingDialogError::Handle(HandleError::NotSupported));
         };
 
-        let (tx, rx) = mpsc::channel();
-        let handler = StackBlock::new(move |resp| {
-            let _ = tx.send(resp);
+        let handler = RcBlock::new(move |resp| {
+            NSApplication::sharedApplication(mtm).stopModalWithCode(resp);
         });
         let handler = handler.copy();
 
         let ns_view = w.ns_view.as_ptr();
-        let ns_view = unsafe { Retained::from_raw(ns_view as *mut NSView) }.unwrap();
+        let ns_view = unsafe { Retained::retain_autoreleased(ns_view as *mut NSView) }.unwrap();
         let ns_window = ns_view.window().unwrap();
 
         ns_alert.beginSheetModalForWindow_completionHandler(&ns_window, Some(&handler));
-
-        let resp = rx.recv().unwrap();
+        let resp = NSApplication::sharedApplication(mtm).runModalForWindow(&ns_window);
 
         Ok(resp == NSAlertSecondButtonReturn)
     }
