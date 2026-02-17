@@ -3,6 +3,7 @@
 
 use super::is_kdialog_available;
 use crate::{BlockingDialogError, BlockingPickFilesDialog};
+use raw_window_handle::HasWindowHandle;
 use std::fmt::Write;
 use std::path::PathBuf;
 use std::process::Command;
@@ -34,7 +35,7 @@ fn get_kdialog_filter(filter: &[BlockingPickFilesDialogFilter]) -> String {
         .join(" ")
 }
 
-impl<'a> BlockingPickFilesDialog<'a> {
+impl<'a, W: HasWindowHandle> BlockingPickFilesDialog<'a, W> {
     pub fn show(&self) -> Result<Vec<PathBuf>, BlockingDialogError> {
         if is_kdialog_available() {
             let mut args = vec!["--getopenfilename", "--title", self.title];
@@ -46,7 +47,7 @@ impl<'a> BlockingPickFilesDialog<'a> {
 
             if !self.filter.is_empty() {
                 args.push(":label1");
-                args.push(get_kdialog_filter(&self.filter));
+                args.push(&get_kdialog_filter(&self.filter));
             }
 
             let output = Command::new("kdialog").args(args).output()?;

@@ -3,9 +3,10 @@
 
 use super::is_kdialog_available;
 use crate::{BlockingConfirmDialog, BlockingDialogError};
+use raw_window_handle::HasWindowHandle;
 use std::process::Command;
 
-impl<'a> BlockingConfirmDialog<'a> {
+impl<'a, W: HasWindowHandle> BlockingConfirmDialog<'a, W> {
     pub fn show(&self) -> Result<bool, BlockingDialogError> {
         let status = if is_kdialog_available() {
             Command::new("kdialog")
