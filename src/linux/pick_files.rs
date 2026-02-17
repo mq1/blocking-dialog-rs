@@ -3,6 +3,7 @@
 
 use super::is_kdialog_available;
 use crate::{BlockingDialogError, BlockingPickFilesDialog};
+use std::fmt::Write;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -14,6 +15,25 @@ fn parse_kdialog_multi_select(raw: &str) -> Vec<PathBuf> {
     raw.split('\n').map(PathBuf::from).collect()
 }
 
+fn get_kdialog_filter(filter: &[BlockingPickFilesDialogFilter]) -> String {
+    filter
+        .iter()
+        .map(|entry| {
+            format!(
+                "{} ({})",
+                entry.name,
+                entry
+                    .extensions
+                    .iter()
+                    .map(|ext| format!("*.{ext}"))
+                    .collect::<Vec<_>>()
+                    .join(" "),
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
 impl<'a> BlockingPickFilesDialog<'a> {
     pub fn show(&self) -> Result<Vec<PathBuf>, BlockingDialogError> {
         if is_kdialog_available() {
@@ -22,6 +42,11 @@ impl<'a> BlockingPickFilesDialog<'a> {
             if self.multiple {
                 args.push("--multiple");
                 args.push("--separate-output");
+            }
+
+            if !self.filter.is_empty() {
+                args.push(":label1");
+                args.push(get_kdialog_filter(&self.filter));
             }
 
             let output = Command::new("kdialog").args(args).output()?;
