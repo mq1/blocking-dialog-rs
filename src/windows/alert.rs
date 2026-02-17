@@ -3,7 +3,7 @@
 
 use super::widen;
 use crate::{BlockingAlertDialog, BlockingDialogError, BlockingDialogLevel};
-use raw_window_handle::RawWindowHandle;
+use raw_window_handle::{HandleError, HasWindowHandle, RawWindowHandle};
 use windows::Win32::Foundation::HWND;
 use windows::Win32::UI::WindowsAndMessaging::{
     MB_ICONERROR, MB_ICONINFORMATION, MB_ICONWARNING, MB_OK, MESSAGEBOX_STYLE, MessageBoxW,
@@ -18,13 +18,18 @@ fn get_utype(level: BlockingDialogLevel) -> MESSAGEBOX_STYLE {
     }
 }
 
-impl<'a> BlockingAlertDialog<'a> {
+impl<'a, W: HasWindowHandle> BlockingAlertDialog<'a, W> {
     pub fn show(&self) -> Result<(), BlockingDialogError> {
         let title_wide = widen(self.title);
         let message_wide = widen(self.message);
 
-        let RawWindowHandle::Win32(handle) = self.window.as_raw() else {
-            return Err(BlockingDialogError::UnsupportedWindowingSystem);
+        let w = match self.window.window_handle() {
+            Ok(w) => w,
+            Err(err) => return Err(BlockingDialogError::Handle(err)),
+        };
+
+        let RawWindowHandle::Win32(handle) = w.as_raw() else {
+            return Err(BlockingDialogError::Handle(HandleError::NotSupported));
         };
 
         let hwnd = HWND(handle.hwnd.get() as *mut _);
