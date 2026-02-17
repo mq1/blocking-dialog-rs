@@ -7,11 +7,7 @@ use raw_window_handle::HasWindowHandle;
 use std::path::PathBuf;
 use std::process::Command;
 
-fn parse_zenity_multi_select(raw: &str) -> Vec<PathBuf> {
-    raw.split('|').map(PathBuf::from).collect()
-}
-
-fn parse_kdialog_multi_select(raw: &str) -> Vec<PathBuf> {
+fn parse_multi_select(raw: &str) -> Vec<PathBuf> {
     raw.split('\n').map(PathBuf::from).collect()
 }
 
@@ -56,7 +52,7 @@ impl<'a, W: HasWindowHandle> BlockingPickFilesDialog<'a, W> {
             if trimmed.is_empty() {
                 Ok(Vec::new())
             } else if self.multiple {
-                Ok(parse_kdialog_multi_select(trimmed))
+                Ok(parse_multi_select(trimmed))
             } else {
                 Ok(vec![PathBuf::from(trimmed)])
             }
@@ -65,6 +61,8 @@ impl<'a, W: HasWindowHandle> BlockingPickFilesDialog<'a, W> {
 
             if self.multiple {
                 args.push("--multiple");
+                args.push("--separator");
+                args.push("\n")
             }
 
             let output = Command::new("zenity").args(args).output()?;
@@ -74,7 +72,7 @@ impl<'a, W: HasWindowHandle> BlockingPickFilesDialog<'a, W> {
             if trimmed.is_empty() {
                 Ok(Vec::new())
             } else if self.multiple {
-                Ok(parse_zenity_multi_select(trimmed))
+                Ok(parse_multi_select(trimmed))
             } else {
                 Ok(vec![PathBuf::from(trimmed)])
             }
