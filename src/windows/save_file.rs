@@ -54,7 +54,7 @@ impl<'a, W: HasWindowHandle> BlockingSaveFileDialog<'a, W> {
 
         // Set default filename if provided
         if let Some(default_filename) = self.default_filename {
-            let default_wide: Vec<u16> = default_filename.encode_utf16().collect();
+            let default_wide = widen(default_filename);
             file_buffer[..default_wide.len()].copy_from_slice(&default_wide);
         }
 
@@ -74,7 +74,7 @@ impl<'a, W: HasWindowHandle> BlockingSaveFileDialog<'a, W> {
         };
 
         if yes {
-            let path = unwiden(path);
+            let path = unwiden(file_buffer);
             Ok(Some(PathBuf::from(path)))
         } else {
             Ok(None)
