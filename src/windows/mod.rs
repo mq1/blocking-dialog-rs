@@ -4,6 +4,7 @@
 pub mod alert;
 pub mod confirm;
 pub mod pick_files;
+pub mod save_file;
 
 pub fn widen<S: AsRef<str>>(s: S) -> Vec<u16> {
     s.as_ref()
