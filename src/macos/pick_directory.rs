@@ -1,43 +1,25 @@
 // SPDX-FileCopyrightText: 2026 Manuel Quarneti <mq1@ik.me>
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use crate::{BlockingDialogError, BlockingPickFilesDialog, BlockingPickFilesDialogFilter};
+use crate::{BlockingDialogError, BlockingPickDirectoryDialog};
 use block2::StackBlock;
 use objc2::{MainThreadMarker, rc::Retained};
 use objc2_app_kit::{NSModalResponseOK, NSOpenPanel, NSView};
-use objc2_foundation::{NSArray, NSString};
-use objc2_uniform_type_identifiers::UTType;
+use objc2_foundation::NSString;
 use raw_window_handle::RawWindowHandle;
 use std::{path::PathBuf, sync::mpsc};
 
-fn get_filter(filter: &[BlockingPickFilesDialogFilter]) -> Retained<NSArray<UTType>> {
-    let mut vec = Vec::new();
-
-    for entry in filter {
-        for ext in entry.extensions {
-            let ext = NSString::from_str(ext);
-            let uttype = UTType::typeWithFilenameExtension(&ext);
-            if let Some(uttype) = uttype {
-                vec.push(uttype)
-            }
-        }
-    }
-
-    NSArray::from_retained_slice(vec.as_slice())
-}
-
-impl<'a> BlockingPickFilesDialog<'a> {
-    pub fn show(&self) -> Result<Vec<PathBuf>, BlockingDialogError> {
+impl<'a> BlockingPickDirectoryDialog<'a> {
+    pub fn show(&self) -> Result<Option<PathBuf>, BlockingDialogError> {
         let Some(mtm) = MainThreadMarker::new() else {
             return Err(BlockingDialogError::NotOnMainThread);
         };
 
         let panel = NSOpenPanel::openPanel(mtm);
         panel.setTitle(Some(&NSString::from_str(self.title)));
-        panel.setCanChooseFiles(true);
-        panel.setCanChooseDirectories(false);
-        panel.setAllowsMultipleSelection(self.multiple);
-        panel.setAllowedContentTypes(&get_filter(self.filter));
+        panel.setCanChooseFiles(false);
+        panel.setCanChooseDirectories(true);
+        panel.setAllowsMultipleSelection(false);
 
         let RawWindowHandle::AppKit(handle) = self.window.as_raw() else {
             return Err(BlockingDialogError::UnsupportedWindowingSystem);
@@ -68,6 +50,6 @@ impl<'a> BlockingPickFilesDialog<'a> {
             }
         }
 
-        Ok(paths)
+        Ok(paths.pop())
     }
 }

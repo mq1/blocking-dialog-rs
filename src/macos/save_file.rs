@@ -1,10 +1,10 @@
 // SPDX-FileCopyrightText: 2026 Manuel Quarneti <mq1@ik.me>
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use crate::{BlockingDialogError, BlockingPickFilesDialog, BlockingPickFilesDialogFilter};
+use crate::{BlockingDialogError, BlockingPickFilesDialogFilter, BlockingSaveFileDialog};
 use block2::StackBlock;
 use objc2::{MainThreadMarker, rc::Retained};
-use objc2_app_kit::{NSModalResponseOK, NSOpenPanel, NSView};
+use objc2_app_kit::{NSModalResponseOK, NSSavePanel, NSView};
 use objc2_foundation::{NSArray, NSString};
 use objc2_uniform_type_identifiers::UTType;
 use raw_window_handle::RawWindowHandle;
@@ -26,18 +26,20 @@ fn get_filter(filter: &[BlockingPickFilesDialogFilter]) -> Retained<NSArray<UTTy
     NSArray::from_retained_slice(vec.as_slice())
 }
 
-impl<'a> BlockingPickFilesDialog<'a> {
-    pub fn show(&self) -> Result<Vec<PathBuf>, BlockingDialogError> {
+impl<'a> BlockingSaveFileDialog<'a> {
+    pub fn show(&self) -> Result<Option<PathBuf>, BlockingDialogError> {
         let Some(mtm) = MainThreadMarker::new() else {
             return Err(BlockingDialogError::NotOnMainThread);
         };
 
-        let panel = NSOpenPanel::openPanel(mtm);
+        let panel = NSSavePanel::savePanel(mtm);
         panel.setTitle(Some(&NSString::from_str(self.title)));
-        panel.setCanChooseFiles(true);
-        panel.setCanChooseDirectories(false);
-        panel.setAllowsMultipleSelection(self.multiple);
         panel.setAllowedContentTypes(&get_filter(self.filter));
+
+        if let Some(default_filename) = &self.default_filename {
+            let default_filename = NSString::from_str(default_filename);
+            panel.setNameFieldStringValue(&default_filename);
+        }
 
         let RawWindowHandle::AppKit(handle) = self.window.as_raw() else {
             return Err(BlockingDialogError::UnsupportedWindowingSystem);
@@ -59,15 +61,14 @@ impl<'a> BlockingPickFilesDialog<'a> {
 
         let mut paths = Vec::new();
 
-        if resp == NSModalResponseOK {
-            for url in panel.URLs() {
-                if let Some(path) = url.path() {
-                    let path = path.as_ref() as &NSString;
-                    paths.push(PathBuf::from(path.to_string()))
-                }
-            }
+        if resp == NSModalResponseOK
+            && let Some(url) = panel.URL()
+            && let Some(path) = url.path()
+        {
+            let path = path.as_ref() as &NSString;
+            paths.push(PathBuf::from(path.to_string()))
         }
 
-        Ok(paths)
+        Ok(paths.pop())
     }
 }

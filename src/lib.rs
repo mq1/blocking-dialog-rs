@@ -45,8 +45,8 @@ pub struct BlockingConfirmDialog<'a> {
 
 #[derive(Debug, Clone)]
 pub struct BlockingPickFilesDialogFilter<'a> {
-    name: &'a str,
-    extensions: &'a [&'a str],
+    pub name: &'a str,
+    pub extensions: &'a [&'a str],
 }
 
 #[derive(Debug, Clone)]
@@ -54,5 +54,19 @@ pub struct BlockingPickFilesDialog<'a> {
     pub window: WindowHandle<'a>,
     pub title: &'a str,
     pub multiple: bool,
+    pub filter: &'a [BlockingPickFilesDialogFilter<'a>],
+}
+
+#[derive(Debug, Clone)]
+pub struct BlockingPickDirectoryDialog<'a> {
+    pub window: WindowHandle<'a>,
+    pub title: &'a str,
+}
+
+#[derive(Debug, Clone)]
+pub struct BlockingSaveFileDialog<'a> {
+    pub window: WindowHandle<'a>,
+    pub title: &'a str,
+    pub default_filename: Option<&'a str>,
     pub filter: &'a [BlockingPickFilesDialogFilter<'a>],
 }
