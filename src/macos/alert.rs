@@ -1,9 +1,16 @@
 // SPDX-FileCopyrightText: 2026 Manuel Quarneti <mq1@ik.me>
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
+use std::sync::mpsc;
+
 use crate::{BlockingAlertDialog, BlockingDialogError, BlockingDialogLevel};
-use objc2::{MainThreadMarker, rc::Retained};
-use objc2_app_kit::{NSAlert, NSAlertStyle, NSImage, NSView};
+use block2::{RcBlock, StackBlock};
+use objc2::rc::autoreleasepool;
+use objc2::{MainThreadMarker, Message, rc::Retained};
+use objc2_app_kit::{
+    NSAlert, NSAlertStyle, NSApplication, NSImage, NSModalResponse, NSStandardKeyBindingResponding,
+    NSView,
+};
 use objc2_foundation::NSString;
 use raw_window_handle::{HandleError, HasWindowHandle, RawWindowHandle};
 
@@ -62,10 +69,14 @@ impl<'a, W: HasWindowHandle> BlockingAlertDialog<'a, W> {
         };
 
         let ns_view = w.ns_view.as_ptr();
-        let ns_view = unsafe { Retained::from_raw(ns_view as *mut NSView) }.unwrap();
+        let ns_view = unsafe { Retained::retain(ns_view as *mut NSView) }.unwrap();
         let ns_window = ns_view.window().unwrap();
 
-        ns_alert.beginSheetModalForWindow_completionHandler(&ns_window, None);
+        let handler = RcBlock::new(move |_| {
+            NSApplication::sharedApplication(mtm).stopModal();
+        });
+
+        ns_alert.beginSheetModalForWindow_completionHandler(&ns_window, Some(&handler));
 
         Ok(())
     }
