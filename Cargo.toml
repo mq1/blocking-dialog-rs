@@ -10,7 +10,7 @@ homepage = "https://github.com/mq1/blocking-dialog-rs"
 description = "Minimal desktop dialog implementation"
 
 [features]
-default = ["xdg-portal"]
+default = ["rfd/wayland", "xdg-portal"]
 xdg-portal = ["rfd/xdg-portal"]
 gtk3 = ["rfd/gtk3"]
 
@@ -56,4 +56,4 @@ windows = { version = ">=0.59, <=0.62", features = [
 ] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-rfd = { version = "0.17", default-features = false, features = ["wayland"] }
+rfd = { version = "0.17", default-features = false }
