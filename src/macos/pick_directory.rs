@@ -3,7 +3,7 @@
 
 use crate::{BlockingDialogError, BlockingPickDirectoryDialog};
 use block2::RcBlock;
-use objc2::{MainThreadMarker, rc::Retained};
+use objc2::MainThreadMarker;
 use objc2_app_kit::{NSApplication, NSModalResponseOK, NSOpenPanel, NSView};
 use objc2_foundation::NSString;
 use raw_window_handle::{HandleError, HasDisplayHandle, HasWindowHandle, RawWindowHandle};
@@ -34,9 +34,10 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickDirectoryDialog<'a, 
             NSApplication::sharedApplication(mtm).stopModalWithCode(resp);
         });
 
-        let ns_view = w.ns_view.as_ptr();
-        let ns_view = unsafe { Retained::retain_autoreleased(ns_view as *mut NSView) }.unwrap();
-        let ns_window = ns_view.window().unwrap();
+        let ns_view = unsafe { w.ns_view.cast::<NSView>().as_ref() };
+        let Some(ns_window) = ns_view.window() else {
+            return Err(BlockingDialogError::Handle(HandleError::Unavailable));
+        };
 
         panel.beginSheetModalForWindow_completionHandler(&ns_window, &handler);
         let resp = NSApplication::sharedApplication(mtm).runModalForWindow(&ns_window);
