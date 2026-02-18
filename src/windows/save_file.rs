@@ -3,7 +3,7 @@
 
 use super::{unwiden, widen};
 use crate::{BlockingDialogError, BlockingPickFilesDialogFilter, BlockingSaveFileDialog};
-use raw_window_handle::{HandleError, HasWindowHandle, RawWindowHandle};
+use raw_window_handle::{HandleError, HasDisplayHandle, HasWindowHandle, RawWindowHandle};
 use std::path::PathBuf;
 use windows::Win32::Foundation::HWND;
 use windows::{
@@ -34,7 +34,7 @@ fn get_filter_utf16(filter: &[BlockingPickFilesDialogFilter]) -> Vec<u16> {
     widen(s)
 }
 
-impl<'a, W: HasWindowHandle> BlockingSaveFileDialog<'a, W> {
+impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingSaveFileDialog<'a, W> {
     pub fn show(&self) -> Result<Option<PathBuf>, BlockingDialogError> {
         let title_wide = widen(self.title);
         let filter_wide = get_filter_utf16(&self.filter);

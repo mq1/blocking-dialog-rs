@@ -3,7 +3,7 @@
 
 use super::{unwiden, widen};
 use crate::{BlockingDialogError, BlockingPickDirectoryDialog};
-use raw_window_handle::{HandleError, HasWindowHandle, RawWindowHandle};
+use raw_window_handle::{HandleError, HasDisplayHandle, HasWindowHandle, RawWindowHandle};
 use std::path::PathBuf;
 use windows::Win32::Foundation::HWND;
 use windows::Win32::System::Com::CoTaskMemFree;
@@ -14,7 +14,7 @@ use windows::Win32::UI::Shell::{
 };
 use windows::core::PCWSTR;
 
-impl<'a, W: HasWindowHandle> BlockingPickDirectoryDialog<'a, W> {
+impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickDirectoryDialog<'a, W> {
     pub fn show(&self) -> Result<Option<PathBuf>, BlockingDialogError> {
         if unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED).is_err() } {
             return Err(BlockingDialogError::CouldNotInitializeCOM);

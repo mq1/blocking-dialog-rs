@@ -6,10 +6,10 @@ use block2::RcBlock;
 use objc2::{MainThreadMarker, rc::Retained};
 use objc2_app_kit::{NSApplication, NSModalResponseOK, NSOpenPanel, NSView};
 use objc2_foundation::NSString;
-use raw_window_handle::{HandleError, HasWindowHandle, RawWindowHandle};
+use raw_window_handle::{HandleError, HasDisplayHandle, HasWindowHandle, RawWindowHandle};
 use std::path::PathBuf;
 
-impl<'a, W: HasWindowHandle> BlockingPickDirectoryDialog<'a, W> {
+impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickDirectoryDialog<'a, W> {
     pub fn show(&self) -> Result<Option<PathBuf>, BlockingDialogError> {
         let Some(mtm) = MainThreadMarker::new() else {
             return Err(BlockingDialogError::NotOnMainThread);

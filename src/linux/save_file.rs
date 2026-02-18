@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use crate::{BlockingDialogError, BlockingPickFilesDialogFilter, BlockingSaveFileDialog};
-use raw_window_handle::HasWindowHandle;
+use raw_window_handle::{HasDisplayHandle, HasWindowHandle};
 use rfd::FileDialog;
 use std::path::PathBuf;
 
-impl<'a, W: HasWindowHandle> BlockingSaveFileDialog<'a, W> {
+impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingSaveFileDialog<'a, W> {
     pub fn show(&self) -> Result<Option<PathBuf>, BlockingDialogError> {
         let mut dialog = FileDialog::new()
             .set_title(self.title)

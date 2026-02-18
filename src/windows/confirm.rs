@@ -3,7 +3,7 @@
 
 use super::widen;
 use crate::{BlockingConfirmDialog, BlockingDialogError, BlockingDialogLevel};
-use raw_window_handle::{HandleError, HasWindowHandle, RawWindowHandle};
+use raw_window_handle::{HandleError, HasDisplayHandle, HasWindowHandle, RawWindowHandle};
 use windows::Win32::Foundation::HWND;
 use windows::Win32::UI::WindowsAndMessaging::{
     MB_ICONERROR, MB_ICONINFORMATION, MB_ICONWARNING, MB_OKCANCEL, MESSAGEBOX_RESULT,
@@ -19,7 +19,7 @@ fn get_utype(level: BlockingDialogLevel) -> MESSAGEBOX_STYLE {
     }
 }
 
-impl<'a, W: HasWindowHandle> BlockingConfirmDialog<'a, W> {
+impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingConfirmDialog<'a, W> {
     pub fn show(&self) -> Result<bool, BlockingDialogError> {
         let title_wide = widen(self.title);
         let message_wide = widen(self.message);

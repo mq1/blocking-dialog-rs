@@ -7,7 +7,7 @@ use objc2::{MainThreadMarker, rc::Retained};
 use objc2_app_kit::{NSApplication, NSModalResponseOK, NSSavePanel, NSView};
 use objc2_foundation::{NSArray, NSString};
 use objc2_uniform_type_identifiers::UTType;
-use raw_window_handle::{HandleError, HasWindowHandle, RawWindowHandle};
+use raw_window_handle::{HandleError, HasDisplayHandle, HasWindowHandle, RawWindowHandle};
 use std::path::PathBuf;
 
 fn get_filter(filter: &[BlockingPickFilesDialogFilter]) -> Retained<NSArray<UTType>> {
@@ -26,7 +26,7 @@ fn get_filter(filter: &[BlockingPickFilesDialogFilter]) -> Retained<NSArray<UTTy
     NSArray::from_retained_slice(vec.as_slice())
 }
 
-impl<'a, W: HasWindowHandle> BlockingSaveFileDialog<'a, W> {
+impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingSaveFileDialog<'a, W> {
     pub fn show(&self) -> Result<Option<PathBuf>, BlockingDialogError> {
         let Some(mtm) = MainThreadMarker::new() else {
             return Err(BlockingDialogError::NotOnMainThread);

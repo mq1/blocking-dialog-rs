@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use crate::{BlockingAlertDialog, BlockingDialogError, BlockingDialogLevel};
-use raw_window_handle::HasWindowHandle;
+use raw_window_handle::{HasDisplayHandle, HasWindowHandle};
 use rfd::{MessageDialog, MessageLevel};
 
 fn get_rfd_dialog_level(level: BlockingDialogLevel) -> MessageLevel {
@@ -13,7 +13,7 @@ fn get_rfd_dialog_level(level: BlockingDialogLevel) -> MessageLevel {
     }
 }
 
-impl<'a, W: HasWindowHandle> BlockingAlertDialog<'a, W> {
+impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingAlertDialog<'a, W> {
     pub fn show(&self) -> Result<(), BlockingDialogError> {
         let _ = MessageDialog::new()
             .set_level(get_rfd_dialog_level(self.level))

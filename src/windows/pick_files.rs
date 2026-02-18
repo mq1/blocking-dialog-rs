@@ -3,7 +3,7 @@
 
 use super::widen;
 use crate::{BlockingDialogError, BlockingPickFilesDialog, BlockingPickFilesDialogFilter};
-use raw_window_handle::{HandleError, HasWindowHandle, RawWindowHandle};
+use raw_window_handle::{HandleError, HasDisplayHandle, HasWindowHandle, RawWindowHandle};
 use std::path::PathBuf;
 use windows::Win32::Foundation::HWND;
 use windows::{
@@ -56,7 +56,7 @@ fn parse_multi_select(buffer: &[u16]) -> Vec<PathBuf> {
     parts[1..].iter().map(|f| dir.join(f)).collect()
 }
 
-impl<'a, W: HasWindowHandle> BlockingPickFilesDialog<'a, W> {
+impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickFilesDialog<'a, W> {
     pub fn show(&self) -> Result<Vec<PathBuf>, BlockingDialogError> {
         let title_wide = widen(self.title);
         let filter_wide = get_filter_utf16(&self.filter);

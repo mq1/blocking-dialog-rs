@@ -8,7 +8,7 @@ use objc2_app_kit::{
     NSAlert, NSAlertFirstButtonReturn, NSAlertStyle, NSApplication, NSImage, NSView,
 };
 use objc2_foundation::{NSString, ns_string};
-use raw_window_handle::{HandleError, HasWindowHandle, RawWindowHandle};
+use raw_window_handle::{HandleError, HasDisplayHandle, HasWindowHandle, RawWindowHandle};
 
 fn get_ns_alert_style(level: BlockingDialogLevel) -> NSAlertStyle {
     match level {
@@ -37,7 +37,7 @@ fn get_ns_alert_icon(level: BlockingDialogLevel) -> Option<Retained<NSImage>> {
     }
 }
 
-impl<'a, W: HasWindowHandle> BlockingConfirmDialog<'a, W> {
+impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingConfirmDialog<'a, W> {
     pub fn show(&self) -> Result<bool, BlockingDialogError> {
         let Some(mtm) = MainThreadMarker::new() else {
             return Err(BlockingDialogError::NotOnMainThread);
