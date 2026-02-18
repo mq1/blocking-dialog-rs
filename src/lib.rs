@@ -22,8 +22,8 @@ pub enum BlockingDialogError {
     CouldNotInitializeCOM,
 
     #[cfg(target_os = "linux")]
-    #[error("Native dialog error: {0}")]
-    NativeDialog(native_dialog::Error),
+    #[error("rfd error")]
+    Rfd,
 }
 
 #[derive(Debug, Clone, Copy)]

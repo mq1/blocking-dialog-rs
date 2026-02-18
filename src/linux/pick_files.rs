@@ -1,35 +1,31 @@
 // SPDX-FileCopyrightText: 2026 Manuel Quarneti <mq1@ik.me>
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use crate::{BlockingDialogError, BlockingPickFilesDialog};
-use native_dialog::DialogBuilder;
+use crate::{BlockingDialogError, BlockingPickFilesDialog, BlockingPickFilesDialogFilter};
 use raw_window_handle::HasWindowHandle;
+use rfd::FileDialog;
 use std::path::PathBuf;
 
 impl<'a, W: HasWindowHandle> BlockingPickFilesDialog<'a, W> {
     pub fn show(&self) -> Result<Vec<PathBuf>, BlockingDialogError> {
-        let mut dialog = DialogBuilder::file()
+        let mut dialog = FileDialog::new()
             .set_title(self.title)
-            .set_owner(&self.window);
+            .set_parent(&self.window);
 
         for entry in self.filter {
             dialog = dialog.add_filter(entry.name, entry.extensions);
         }
 
-        if self.multiple {
-            let dialog = dialog.open_multiple_file();
-
-            match dialog.show() {
-                Ok(paths) => Ok(paths),
-                Err(err) => Err(BlockingDialogError::NativeDialog(err)),
+        let result = if self.multiple {
+            match dialog.pick_files() {
+                Some(files) => Ok(files),
+                None => Ok(Vec::new()),
             }
         } else {
-            let dialog = dialog.open_single_file();
-
-            match dialog.show() {
-                Ok(path) => Ok(path.into_iter().collect()),
-                Err(err) => Err(BlockingDialogError::NativeDialog(err)),
+            match dialog.pick_file() {
+                Some(file) => Ok(file.into_iter().collect()),
+                None => Ok(Vec::new()),
             }
-        }
+        };
     }
 }
