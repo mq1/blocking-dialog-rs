@@ -1,6 +1,6 @@
 [package]
 name = "blocking-dialog"
-version = "0.0.9"
+version = "0.0.10"
 edition = "2024"
 rust-version = "1.88"
 authors = ["Manuel Quarneti <mq1@ik.me>"]
