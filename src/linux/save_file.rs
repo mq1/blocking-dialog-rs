@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Manuel Quarneti <mq1@ik.me>
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use crate::{BlockingDialogError, BlockingPickFilesDialogFilter, BlockingSaveFileDialog};
+use crate::{BlockingDialogError, BlockingSaveFileDialog};
 use raw_window_handle::{HasDisplayHandle, HasWindowHandle};
 use rfd::FileDialog;
 use std::path::PathBuf;
