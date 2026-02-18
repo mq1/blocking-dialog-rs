@@ -72,7 +72,7 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickFilesDialog<'a, W> {
 
         let hwnd = HWND(handle.hwnd.get() as *mut _);
 
-        let mut file_buffer = vec![0u16, 32_768];
+        let mut file_buffer = vec![0u16; 32_768];
 
         let mut flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_EXPLORER;
         if self.multiple {
