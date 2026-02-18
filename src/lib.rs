@@ -20,10 +20,6 @@ pub enum BlockingDialogError {
     Handle(HandleError),
     #[error("Could not initialize COM")]
     CouldNotInitializeCOM,
-
-    #[cfg(target_os = "linux")]
-    #[error("rfd error")]
-    Rfd,
 }
 
 #[derive(Debug, Clone, Copy)]
