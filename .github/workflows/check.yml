@@ -25,5 +25,5 @@ jobs:
         uses: dtolnay/rust-toolchain@1.88
 
       - name: check
-        run: cargo check --no-default-features
+        run: cargo check --no-default-features --features gtk3
 
