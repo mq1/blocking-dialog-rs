@@ -1,6 +1,6 @@
 [package]
 name = "blocking-dialog"
-version = "0.0.7"
+version = "0.0.8"
 edition = "2024"
 rust-version = "1.88"
 authors = ["Manuel Quarneti <mq1@ik.me>"]
@@ -11,6 +11,7 @@ description = "Minimal desktop dialog implementation"
 
 [features]
 default = ["rfd/wayland", "xdg-portal"]
+wayland = ["rfd/wayland"]
 xdg-portal = ["rfd/xdg-portal"]
 gtk3 = ["rfd/gtk3"]
 
