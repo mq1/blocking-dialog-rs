@@ -16,16 +16,22 @@ use windows::core::PCWSTR;
 
 impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickDirectoryDialog<'a, W> {
     pub fn show(&self) -> Result<Option<PathBuf>, BlockingDialogError> {
-        if unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED).is_err() } {
-            return Err(BlockingDialogError::CouldNotInitializeCOM);
-        }
+        let com_initialized = unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED).is_ok() };
 
         let w = match self.window.window_handle() {
             Ok(w) => w,
-            Err(err) => return Err(BlockingDialogError::Handle(err)),
+            Err(err) => {
+                if com_initialized {
+                    unsafe { CoUninitialize() };
+                }
+                return Err(BlockingDialogError::Handle(err));
+            }
         };
 
         let RawWindowHandle::Win32(handle) = w.as_raw() else {
+            if com_initialized {
+                unsafe { CoUninitialize() };
+            }
             return Err(BlockingDialogError::Handle(HandleError::NotSupported));
         };
 
@@ -43,8 +49,8 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickDirectoryDialog<'a, 
         let pidl = unsafe { SHBrowseForFolderW(&mut browse_info) };
 
         if pidl.is_null() {
-            unsafe {
-                CoUninitialize();
+            if com_initialized {
+                unsafe { CoUninitialize() };
             }
             return Ok(None);
         }
@@ -54,7 +60,9 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickDirectoryDialog<'a, 
 
         unsafe {
             CoTaskMemFree(Some(pidl as *const _));
-            CoUninitialize();
+            if com_initialized {
+                CoUninitialize();
+            }
         }
 
         if success.as_bool() {

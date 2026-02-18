@@ -6,6 +6,7 @@ use crate::{BlockingDialogError, BlockingPickFilesDialog, BlockingPickFilesDialo
 use raw_window_handle::{HandleError, HasDisplayHandle, HasWindowHandle, RawWindowHandle};
 use std::path::PathBuf;
 use windows::Win32::Foundation::HWND;
+use windows::Win32::System::Com::{COINIT_APARTMENTTHREADED, CoInitializeEx, CoUninitialize};
 use windows::{
     Win32::UI::Controls::Dialogs::{
         GetOpenFileNameW, OFN_ALLOWMULTISELECT, OFN_EXPLORER, OFN_FILEMUSTEXIST, OFN_PATHMUSTEXIST,
@@ -58,15 +59,25 @@ fn parse_multi_select(buffer: &[u16]) -> Vec<PathBuf> {
 
 impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickFilesDialog<'a, W> {
     pub fn show(&self) -> Result<Vec<PathBuf>, BlockingDialogError> {
+        let com_initialized = unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED).is_ok() };
+
         let title_wide = widen(self.title);
         let filter_wide = get_filter_utf16(&self.filter);
 
         let w = match self.window.window_handle() {
             Ok(w) => w,
-            Err(err) => return Err(BlockingDialogError::Handle(err)),
+            Err(err) => {
+                if com_initialized {
+                    unsafe { CoUninitialize() };
+                }
+                return Err(BlockingDialogError::Handle(err));
+            }
         };
 
         let RawWindowHandle::Win32(handle) = w.as_raw() else {
+            if com_initialized {
+                unsafe { CoUninitialize() };
+            }
             return Err(BlockingDialogError::Handle(HandleError::NotSupported));
         };
 
@@ -79,7 +90,7 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickFilesDialog<'a, W> {
             flags |= OFN_ALLOWMULTISELECT;
         }
 
-        let yes = unsafe {
+        let result = unsafe {
             let mut ofn = OPENFILENAMEW {
                 lStructSize: std::mem::size_of::<OPENFILENAMEW>() as u32,
                 hwndOwner: hwnd,
@@ -91,10 +102,16 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickFilesDialog<'a, W> {
                 ..Default::default()
             };
 
-            GetOpenFileNameW(&mut ofn).as_bool()
+            let success = GetOpenFileNameW(&mut ofn).as_bool();
+
+            if com_initialized {
+                CoUninitialize();
+            }
+
+            success
         };
 
-        if yes {
+        if result {
             Ok(parse_multi_select(&file_buffer))
         } else {
             Ok(Vec::new())

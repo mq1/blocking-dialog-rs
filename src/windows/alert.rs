@@ -5,6 +5,7 @@ use super::widen;
 use crate::{BlockingAlertDialog, BlockingDialogError, BlockingDialogLevel};
 use raw_window_handle::{HandleError, HasDisplayHandle, HasWindowHandle, RawWindowHandle};
 use windows::Win32::Foundation::HWND;
+use windows::Win32::System::Com::{COINIT_APARTMENTTHREADED, CoInitializeEx, CoUninitialize};
 use windows::Win32::UI::WindowsAndMessaging::{
     MB_ICONERROR, MB_ICONINFORMATION, MB_ICONWARNING, MB_OK, MESSAGEBOX_STYLE, MessageBoxW,
 };
@@ -20,15 +21,25 @@ fn get_utype(level: BlockingDialogLevel) -> MESSAGEBOX_STYLE {
 
 impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingAlertDialog<'a, W> {
     pub fn show(&self) -> Result<(), BlockingDialogError> {
+        let com_initialized = unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED).is_ok() };
+
         let title_wide = widen(self.title);
         let message_wide = widen(self.message);
 
         let w = match self.window.window_handle() {
             Ok(w) => w,
-            Err(err) => return Err(BlockingDialogError::Handle(err)),
+            Err(err) => {
+                if com_initialized {
+                    unsafe { CoUninitialize() };
+                }
+                return Err(BlockingDialogError::Handle(err));
+            }
         };
 
         let RawWindowHandle::Win32(handle) = w.as_raw() else {
+            if com_initialized {
+                unsafe { CoUninitialize() };
+            }
             return Err(BlockingDialogError::Handle(HandleError::NotSupported));
         };
 
@@ -42,6 +53,10 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingAlertDialog<'a, W> {
                 PCWSTR(title_wide.as_ptr()),
                 utype,
             );
+
+            if com_initialized {
+                CoUninitialize();
+            }
         }
 
         Ok(())

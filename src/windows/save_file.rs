@@ -6,6 +6,7 @@ use crate::{BlockingDialogError, BlockingPickFilesDialogFilter, BlockingSaveFile
 use raw_window_handle::{HandleError, HasDisplayHandle, HasWindowHandle, RawWindowHandle};
 use std::path::PathBuf;
 use windows::Win32::Foundation::HWND;
+use windows::Win32::System::Com::{COINIT_APARTMENTTHREADED, CoInitializeEx, CoUninitialize};
 use windows::{
     Win32::UI::Controls::Dialogs::{
         GetSaveFileNameW, OFN_EXPLORER, OFN_OVERWRITEPROMPT, OPENFILENAMEW,
@@ -36,15 +37,25 @@ fn get_filter_utf16(filter: &[BlockingPickFilesDialogFilter]) -> Vec<u16> {
 
 impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingSaveFileDialog<'a, W> {
     pub fn show(&self) -> Result<Option<PathBuf>, BlockingDialogError> {
+        let com_initialized = unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED).is_ok() };
+
         let title_wide = widen(self.title);
         let filter_wide = get_filter_utf16(&self.filter);
 
         let w = match self.window.window_handle() {
             Ok(w) => w,
-            Err(err) => return Err(BlockingDialogError::Handle(err)),
+            Err(err) => {
+                if com_initialized {
+                    unsafe { CoUninitialize() };
+                }
+                return Err(BlockingDialogError::Handle(err));
+            }
         };
 
         let RawWindowHandle::Win32(handle) = w.as_raw() else {
+            if com_initialized {
+                unsafe { CoUninitialize() };
+            }
             return Err(BlockingDialogError::Handle(HandleError::NotSupported));
         };
 
@@ -58,7 +69,7 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingSaveFileDialog<'a, W> {
             file_buffer[..default_wide.len()].copy_from_slice(&default_wide);
         }
 
-        let yes = unsafe {
+        let result = unsafe {
             let mut ofn = OPENFILENAMEW {
                 lStructSize: std::mem::size_of::<OPENFILENAMEW>() as u32,
                 hwndOwner: hwnd,
@@ -70,10 +81,16 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingSaveFileDialog<'a, W> {
                 ..Default::default()
             };
 
-            GetSaveFileNameW(&mut ofn).as_bool()
+            let success = GetSaveFileNameW(&mut ofn).as_bool();
+
+            if com_initialized {
+                CoUninitialize();
+            }
+
+            success
         };
 
-        if yes {
+        if result {
             let path = unwiden(file_buffer);
             Ok(Some(PathBuf::from(path)))
         } else {
