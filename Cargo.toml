@@ -1,6 +1,6 @@
 [package]
 name = "blocking-dialog"
-version = "0.0.10"
+version = "0.0.11"
 edition = "2024"
 rust-version = "1.88"
 authors = ["Manuel Quarneti <mq1@ik.me>"]
@@ -10,8 +10,7 @@ homepage = "https://github.com/mq1/blocking-dialog-rs"
 description = "Minimal desktop dialog implementation"
 
 [features]
-default = ["rfd/wayland", "xdg-portal"]
-wayland = ["rfd/wayland"]
+default = ["xdg-portal"]
 xdg-portal = ["rfd/xdg-portal"]
 gtk3 = ["rfd/gtk3"]
 
@@ -57,4 +56,4 @@ windows = { version = ">=0.59, <=0.62", features = [
 ] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-rfd = { version = "0.17", default-features = false }
+rfd = { version = "0.17", default-features = false, features = ["wayland"] }
