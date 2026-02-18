@@ -16,22 +16,15 @@ use windows::core::PCWSTR;
 
 impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickDirectoryDialog<'a, W> {
     pub fn show(&self) -> Result<Option<PathBuf>, BlockingDialogError> {
-        let com_initialized = unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED).is_ok() };
+        let _com_guard =
+            ComGuard(unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED).is_ok() });
 
-        let w = match self.window.window_handle() {
-            Ok(w) => w,
-            Err(err) => {
-                if com_initialized {
-                    unsafe { CoUninitialize() };
-                }
-                return Err(BlockingDialogError::Handle(err));
-            }
-        };
+        let w = self
+            .window
+            .window_handle()
+            .map_err(BlockingDialogError::Handle)?;
 
         let RawWindowHandle::Win32(handle) = w.as_raw() else {
-            if com_initialized {
-                unsafe { CoUninitialize() };
-            }
             return Err(BlockingDialogError::Handle(HandleError::NotSupported));
         };
 
@@ -49,9 +42,6 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickDirectoryDialog<'a, 
         let pidl = unsafe { SHBrowseForFolderW(&mut browse_info) };
 
         if pidl.is_null() {
-            if com_initialized {
-                unsafe { CoUninitialize() };
-            }
             return Ok(None);
         }
 
@@ -60,9 +50,6 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickDirectoryDialog<'a, 
 
         unsafe {
             CoTaskMemFree(Some(pidl as *const _));
-            if com_initialized {
-                CoUninitialize();
-            }
         }
 
         if success.as_bool() {
@@ -70,6 +57,16 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickDirectoryDialog<'a, 
             Ok(Some(PathBuf::from(path)))
         } else {
             Ok(None)
+        }
+    }
+}
+
+struct ComGuard(bool);
+
+impl Drop for ComGuard {
+    fn drop(&mut self) {
+        if self.0 {
+            unsafe { CoUninitialize() };
         }
     }
 }

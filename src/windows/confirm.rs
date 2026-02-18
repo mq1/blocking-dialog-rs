@@ -22,25 +22,18 @@ fn get_utype(level: BlockingDialogLevel) -> MESSAGEBOX_STYLE {
 
 impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingConfirmDialog<'a, W> {
     pub fn show(&self) -> Result<bool, BlockingDialogError> {
-        let com_initialized = unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED).is_ok() };
+        let _com_guard =
+            ComGuard(unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED).is_ok() });
 
         let title_wide = widen(self.title);
         let message_wide = widen(self.message);
 
-        let w = match self.window.window_handle() {
-            Ok(w) => w,
-            Err(err) => {
-                if com_initialized {
-                    unsafe { CoUninitialize() };
-                }
-                return Err(BlockingDialogError::Handle(err));
-            }
-        };
+        let w = self
+            .window
+            .window_handle()
+            .map_err(BlockingDialogError::Handle)?;
 
         let RawWindowHandle::Win32(handle) = w.as_raw() else {
-            if com_initialized {
-                unsafe { CoUninitialize() };
-            }
             return Err(BlockingDialogError::Handle(HandleError::NotSupported));
         };
 
@@ -55,13 +48,19 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingConfirmDialog<'a, W> {
                 utype,
             );
 
-            if com_initialized {
-                CoUninitialize();
-            }
-
             res == MESSAGEBOX_RESULT(1)
         };
 
         Ok(yes)
+    }
+}
+
+struct ComGuard(bool);
+
+impl Drop for ComGuard {
+    fn drop(&mut self) {
+        if self.0 {
+            unsafe { CoUninitialize() };
+        }
     }
 }

@@ -59,25 +59,18 @@ fn parse_multi_select(buffer: &[u16]) -> Vec<PathBuf> {
 
 impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickFilesDialog<'a, W> {
     pub fn show(&self) -> Result<Vec<PathBuf>, BlockingDialogError> {
-        let com_initialized = unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED).is_ok() };
+        let _com_guard =
+            ComGuard(unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED).is_ok() });
 
         let title_wide = widen(self.title);
         let filter_wide = get_filter_utf16(&self.filter);
 
-        let w = match self.window.window_handle() {
-            Ok(w) => w,
-            Err(err) => {
-                if com_initialized {
-                    unsafe { CoUninitialize() };
-                }
-                return Err(BlockingDialogError::Handle(err));
-            }
-        };
+        let w = self
+            .window
+            .window_handle()
+            .map_err(BlockingDialogError::Handle)?;
 
         let RawWindowHandle::Win32(handle) = w.as_raw() else {
-            if com_initialized {
-                unsafe { CoUninitialize() };
-            }
             return Err(BlockingDialogError::Handle(HandleError::NotSupported));
         };
 
@@ -102,19 +95,23 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickFilesDialog<'a, W> {
                 ..Default::default()
             };
 
-            let success = GetOpenFileNameW(&mut ofn).as_bool();
-
-            if com_initialized {
-                CoUninitialize();
-            }
-
-            success
+            GetOpenFileNameW(&mut ofn).as_bool()
         };
 
         if result {
             Ok(parse_multi_select(&file_buffer))
         } else {
             Ok(Vec::new())
+        }
+    }
+}
+
+struct ComGuard(bool);
+
+impl Drop for ComGuard {
+    fn drop(&mut self) {
+        if self.0 {
+            unsafe { CoUninitialize() };
         }
     }
 }
