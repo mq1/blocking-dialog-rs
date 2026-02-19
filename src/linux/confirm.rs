@@ -16,7 +16,7 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingConfirmDialog<'a, W> {
             .title(self.title)
             .buttons(zenity_rs::ButtonPreset::OkCancel);
 
-        let yes = dialog.show()? == zenity_rs::DialogResult::Button(0);
+        let yes = dialog.show()? == zenity_rs::DialogResult::Button(1);
 
         Ok(yes)
     }
