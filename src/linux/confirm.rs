@@ -3,26 +3,21 @@
 
 use crate::{BlockingConfirmDialog, BlockingDialogError, BlockingDialogLevel};
 use raw_window_handle::{HasDisplayHandle, HasWindowHandle};
-use rfd::{MessageButtons, MessageDialog, MessageDialogResult, MessageLevel};
-
-fn get_rfd_dialog_level(level: BlockingDialogLevel) -> MessageLevel {
-    match level {
-        BlockingDialogLevel::Info => MessageLevel::Info,
-        BlockingDialogLevel::Warning => MessageLevel::Warning,
-        BlockingDialogLevel::Error => MessageLevel::Error,
-    }
-}
 
 impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingConfirmDialog<'a, W> {
     pub fn show(&self) -> Result<bool, BlockingDialogError> {
-        let result = MessageDialog::new()
-            .set_level(get_rfd_dialog_level(self.level))
-            .set_title(self.title)
-            .set_description(self.message)
-            .set_buttons(MessageButtons::OkCancel)
-            .set_parent(&self.window)
-            .show();
+        let dialog = match self.level {
+            BlockingDialogLevel::Info => zenity_rs::info(self.message),
+            BlockingDialogLevel::Warning => zenity_rs::warning(self.message),
+            BlockingDialogLevel::Error => zenity_rs::error(self.message),
+        };
 
-        Ok(result == MessageDialogResult::Ok)
+        let dialog = dialog
+            .title(self.title)
+            .buttons(zenity_rs::ButtonPreset::OkCancel);
+
+        let yes = dialog.show()? == zenity_rs::DialogResult::Button(0);
+
+        Ok(yes)
     }
 }

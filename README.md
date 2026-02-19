@@ -10,9 +10,9 @@ Examples: <https://github.com/mq1/TinyWiiBackupManager/blob/main/src/ui/dialogs.
 
 ### Goals and non-goals
 
-- Windows XP+ support
-- macOS support
-- Linux support (wraps [rfd](https://github.com/PolyMeilex/rfd) as of now)
+- Windows XP+ support (using the windows crate)
+- macOS support (using the objc2 crate)
+- Linux support (using the zenity-rs crate)
 - No async
 - Few dependencies
 - Simple api

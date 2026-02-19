@@ -3,29 +3,36 @@
 
 use crate::{BlockingDialogError, BlockingPickFilesDialog};
 use raw_window_handle::{HasDisplayHandle, HasWindowHandle};
-use rfd::FileDialog;
 use std::path::PathBuf;
 
 impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickFilesDialog<'a, W> {
     pub fn show(&self) -> Result<Vec<PathBuf>, BlockingDialogError> {
-        let mut dialog = FileDialog::new()
-            .set_title(self.title)
-            .set_parent(&self.window);
+        let mut dialog = zenity_rs::file_select()
+            .title(self.title)
+            .directory(false)
+            .multiple(self.multiple);
 
         for entry in self.filter {
-            dialog = dialog.add_filter(entry.name, entry.extensions);
+            let patterns = entry
+                .extensions
+                .iter()
+                .map(|ext| format!("*.{}", ext))
+                .collect::<Vec<_>>();
+
+            let filter = zenity_rs::FileFilter {
+                name: entry.name.to_string(),
+                patterns,
+            };
+
+            dialog = dialog.add_filter(filter);
         }
 
-        if self.multiple {
-            match dialog.pick_files() {
-                Some(files) => Ok(files),
-                None => Ok(Vec::new()),
-            }
-        } else {
-            match dialog.pick_file() {
-                Some(file) => Ok(vec![file]),
-                None => Ok(Vec::new()),
-            }
+        let res = dialog.show()?;
+
+        match res {
+            zenity_rs::FileSelectResult::Selected(path) => Ok(vec![path]),
+            zenity_rs::FileSelectResult::SelectedMultiple(paths) => Ok(paths),
+            _ => Ok(Vec::new()),
         }
     }
 }

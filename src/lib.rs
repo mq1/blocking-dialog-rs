@@ -20,6 +20,10 @@ pub enum BlockingDialogError {
     Handle(HandleError),
     #[error("Could not initialize COM")]
     CouldNotInitializeCOM,
+
+    #[cfg(target_os = "linux")]
+    #[error("Zenity error: {0}")]
+    Zenity(#[from] zenity_rs::Error),
 }
 
 #[derive(Debug, Clone, Copy)]

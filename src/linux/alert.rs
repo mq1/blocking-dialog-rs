@@ -3,24 +3,20 @@
 
 use crate::{BlockingAlertDialog, BlockingDialogError, BlockingDialogLevel};
 use raw_window_handle::{HasDisplayHandle, HasWindowHandle};
-use rfd::{MessageDialog, MessageLevel};
-
-fn get_rfd_dialog_level(level: BlockingDialogLevel) -> MessageLevel {
-    match level {
-        BlockingDialogLevel::Info => MessageLevel::Info,
-        BlockingDialogLevel::Warning => MessageLevel::Warning,
-        BlockingDialogLevel::Error => MessageLevel::Error,
-    }
-}
 
 impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingAlertDialog<'a, W> {
     pub fn show(&self) -> Result<(), BlockingDialogError> {
-        let _ = MessageDialog::new()
-            .set_level(get_rfd_dialog_level(self.level))
-            .set_title(self.title)
-            .set_description(self.message)
-            .set_parent(&self.window)
-            .show();
+        let dialog = match self.level {
+            BlockingDialogLevel::Info => zenity_rs::info(self.message),
+            BlockingDialogLevel::Warning => zenity_rs::warning(self.message),
+            BlockingDialogLevel::Error => zenity_rs::error(self.message),
+        };
+
+        let dialog = dialog
+            .title(self.title)
+            .buttons(zenity_rs::ButtonPreset::Ok);
+
+        let _ = dialog.show()?;
 
         Ok(())
     }

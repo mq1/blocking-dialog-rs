@@ -1,6 +1,6 @@
 [package]
 name = "blocking-dialog"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 rust-version = "1.88"
 authors = ["Manuel Quarneti <mq1@ik.me>"]
@@ -51,4 +51,4 @@ windows = { version = ">=0.59, <=0.62", features = [
 ] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-rfd = "0.17"
+zenity-rs = { git = "https://github.com/mq1/zenity-rs.git" }

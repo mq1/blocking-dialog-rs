@@ -3,16 +3,21 @@
 
 use crate::{BlockingDialogError, BlockingPickDirectoryDialog};
 use raw_window_handle::{HasDisplayHandle, HasWindowHandle};
-use rfd::FileDialog;
 use std::path::PathBuf;
 
 impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickDirectoryDialog<'a, W> {
     pub fn show(&self) -> Result<Option<PathBuf>, BlockingDialogError> {
-        let result = FileDialog::new()
-            .set_title(self.title)
-            .set_parent(&self.window)
-            .pick_folder();
+        let dialog = zenity_rs::file_select()
+            .title(self.title)
+            .directory(true)
+            .multiple(false);
 
-        Ok(result)
+        let res = dialog.show()?;
+
+        if let zenity_rs::FileSelectResult::Selected(path) = res {
+            Ok(Some(path))
+        } else {
+            Ok(None)
+        }
     }
 }
