@@ -1157,7 +1157,7 @@ checksum = "bec9e4a500ca8864c5b47b8b482a73d62e4237670e5b5f1d6b9e3cae50f28f2b"
 [[package]]
 name = "zenity-rs"
 version = "0.2.1"
-source = "git+https://github.com/mq1/zenity-rs.git#e4bc340fcd50bb51f476f4fb4169c8e7ad63e3ff"
+source = "git+https://github.com/mq1/zenity-rs.git#26dc98018f576a627dc1d9178b2edba24d1b11c5"
 dependencies = [
  "ab_glyph",
  "bitflags",
