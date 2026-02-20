@@ -29,7 +29,7 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingConfirmDialog<'a, W> {
                     &notification_id,
                     Notification::new(self.title)
                         .body(self.message)
-                        .priority(Priority::High)
+                        .priority(Priority::Urgent)
                         .icon(icon)
                         .button(Button::new("OK", "ok"))
                         .button(Button::new("Cancel", "cancel")),
