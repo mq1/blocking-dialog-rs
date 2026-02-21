@@ -22,6 +22,7 @@ pub enum BlockingDialogError {
     CouldNotInitializeCOM,
 }
 
+#[cfg(any(target_os = "windows", target_os = "macos"))]
 #[derive(Debug, Clone, Copy)]
 pub enum BlockingDialogLevel {
     Info,
@@ -29,6 +30,7 @@ pub enum BlockingDialogLevel {
     Error,
 }
 
+#[cfg(any(target_os = "windows", target_os = "macos"))]
 #[derive(Debug, Clone)]
 pub struct BlockingAlertDialog<'a, W: HasWindowHandle + HasDisplayHandle> {
     pub window: W,
@@ -37,6 +39,7 @@ pub struct BlockingAlertDialog<'a, W: HasWindowHandle + HasDisplayHandle> {
     pub level: BlockingDialogLevel,
 }
 
+#[cfg(any(target_os = "windows", target_os = "macos"))]
 #[derive(Debug, Clone)]
 pub struct BlockingConfirmDialog<'a, W: HasWindowHandle + HasDisplayHandle> {
     pub window: W,
