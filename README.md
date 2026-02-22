@@ -12,7 +12,7 @@ Examples: <https://github.com/mq1/TinyWiiBackupManager/blob/main/src/ui/dialogs.
 
 - Windows XP+ support
 - macOS support
-- Linux support (wraps [rfd](https://github.com/PolyMeilex/rfd) as of now)
+- Linux support (wraps [rfd](https://github.com/PolyMeilex/rfd) as of now, only file dialogs)
 - No async
 - Few dependencies
 - Simple api
