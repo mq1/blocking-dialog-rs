@@ -4,10 +4,10 @@
 use super::{unwiden, widen};
 use crate::{BlockingDialogError, BlockingPickDirectoryDialog};
 use raw_window_handle::{HandleError, HasDisplayHandle, HasWindowHandle, RawWindowHandle};
+use std::ffi::c_void;
 use std::path::PathBuf;
 use windows::Win32::Foundation::HWND;
 use windows::Win32::System::Com::CoTaskMemFree;
-use windows::Win32::System::Com::{COINIT_APARTMENTTHREADED, CoInitializeEx, CoUninitialize};
 use windows::Win32::UI::Shell::SHGetPathFromIDListW;
 use windows::Win32::UI::Shell::{
     BIF_NEWDIALOGSTYLE, BIF_RETURNONLYFSDIRS, BROWSEINFOW, SHBrowseForFolderW,
@@ -16,9 +16,6 @@ use windows::core::PCWSTR;
 
 impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickDirectoryDialog<'a, W> {
     pub fn show(&self) -> Result<Option<PathBuf>, BlockingDialogError> {
-        let _com_guard =
-            ComGuard(unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED).is_ok() });
-
         let w = self
             .window
             .window_handle()
@@ -28,7 +25,7 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickDirectoryDialog<'a, 
             return Err(BlockingDialogError::Handle(HandleError::NotSupported));
         };
 
-        let hwnd = HWND(handle.hwnd.get() as *mut _);
+        let hwnd = HWND(handle.hwnd.get() as *mut c_void);
 
         let title_wide = widen(self.title);
 
@@ -39,18 +36,16 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickDirectoryDialog<'a, 
             ..Default::default()
         };
 
-        let pidl = unsafe { SHBrowseForFolderW(&mut browse_info) };
+        let raw_pidl = unsafe { SHBrowseForFolderW(&mut browse_info) };
 
-        if pidl.is_null() {
+        if raw_pidl.is_null() {
             return Ok(None);
         }
 
-        let mut pszpath = [0u16; 260];
-        let success = unsafe { SHGetPathFromIDListW(pidl, &mut pszpath) };
+        let pidl_guard = Pidl(raw_pidl as *mut _);
 
-        unsafe {
-            CoTaskMemFree(Some(pidl as *const _));
-        }
+        let mut pszpath = [0u16; 260];
+        let success = unsafe { SHGetPathFromIDListW(pidl_guard.0 as *const _, &mut pszpath) };
 
         if success.as_bool() {
             let path = unwiden(pszpath);
@@ -61,12 +56,9 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickDirectoryDialog<'a, 
     }
 }
 
-struct ComGuard(bool);
-
-impl Drop for ComGuard {
+struct Pidl(*mut std::ffi::c_void);
+impl Drop for Pidl {
     fn drop(&mut self) {
-        if self.0 {
-            unsafe { CoUninitialize() };
-        }
+        unsafe { CoTaskMemFree(Some(self.0)) };
     }
 }

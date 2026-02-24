@@ -4,27 +4,26 @@
 use super::widen;
 use crate::{BlockingConfirmDialog, BlockingDialogError, BlockingDialogLevel};
 use raw_window_handle::{HandleError, HasDisplayHandle, HasWindowHandle, RawWindowHandle};
+use std::ffi::c_void;
 use windows::Win32::Foundation::HWND;
-use windows::Win32::System::Com::{COINIT_APARTMENTTHREADED, CoInitializeEx, CoUninitialize};
 use windows::Win32::UI::WindowsAndMessaging::{
-    MB_ICONERROR, MB_ICONINFORMATION, MB_ICONWARNING, MB_OKCANCEL, MESSAGEBOX_RESULT,
-    MESSAGEBOX_STYLE, MessageBoxW,
+    MB_ICONERROR, MB_ICONINFORMATION, MB_ICONWARNING, MB_OKCANCEL, MB_SETFOREGROUND, MB_TOPMOST,
+    MESSAGEBOX_RESULT, MESSAGEBOX_STYLE, MessageBoxW,
 };
 use windows::core::PCWSTR;
 
 fn get_utype(level: BlockingDialogLevel) -> MESSAGEBOX_STYLE {
-    match level {
-        BlockingDialogLevel::Info => MB_OKCANCEL | MB_ICONINFORMATION,
-        BlockingDialogLevel::Warning => MB_OKCANCEL | MB_ICONWARNING,
-        BlockingDialogLevel::Error => MB_OKCANCEL | MB_ICONERROR,
-    }
+    let level = match level {
+        BlockingDialogLevel::Info => MB_ICONINFORMATION,
+        BlockingDialogLevel::Warning => MB_ICONWARNING,
+        BlockingDialogLevel::Error => MB_ICONERROR,
+    };
+
+    level | MB_OKCANCEL | MB_TOPMOST | MB_SETFOREGROUND
 }
 
 impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingConfirmDialog<'a, W> {
     pub fn show(&self) -> Result<bool, BlockingDialogError> {
-        let _com_guard =
-            ComGuard(unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED).is_ok() });
-
         let title_wide = widen(self.title);
         let message_wide = widen(self.message);
 
@@ -37,30 +36,17 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingConfirmDialog<'a, W> {
             return Err(BlockingDialogError::Handle(HandleError::NotSupported));
         };
 
-        let hwnd = HWND(handle.hwnd.get() as *mut _);
-        let utype = get_utype(self.level);
-
         let yes = unsafe {
             let res = MessageBoxW(
-                Some(hwnd),
+                None,
                 PCWSTR(message_wide.as_ptr()),
                 PCWSTR(title_wide.as_ptr()),
-                utype,
+                get_utype(self.level),
             );
 
             res == MESSAGEBOX_RESULT(1)
         };
 
         Ok(yes)
-    }
-}
-
-struct ComGuard(bool);
-
-impl Drop for ComGuard {
-    fn drop(&mut self) {
-        if self.0 {
-            unsafe { CoUninitialize() };
-        }
     }
 }
