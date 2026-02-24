@@ -6,9 +6,10 @@ use crate::{BlockingDialogError, BlockingPickDirectoryDialog};
 use raw_window_handle::{HandleError, HasDisplayHandle, HasWindowHandle, RawWindowHandle};
 use std::path::PathBuf;
 use windows::Win32::Foundation::HWND;
+use windows::Win32::System::Com::{COINIT_APARTMENTTHREADED, CoInitializeEx, CoUninitialize};
 use windows::Win32::UI::Shell::SHGetPathFromIDListW;
 use windows::Win32::UI::Shell::{
-    BIF_NEWDIALOGSTYLE, BIF_RETURNONLYFSDIRS, BROWSEINFOW, SHBrowseForFolderW, SHGetMalloc,
+    BIF_NEWDIALOGSTYLE, BIF_RETURNONLYFSDIRS, BROWSEINFOW, SHBrowseForFolderW,
 };
 use windows::core::PCWSTR;
 
@@ -40,16 +41,10 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickDirectoryDialog<'a, 
             return Ok(None);
         }
 
+        let pidl_guard = Pidl(raw_pidl as *mut _);
+
         let mut pszpath = [0u16; 260];
-        let success = unsafe { SHGetPathFromIDListW(pidl, &mut pszpath) };
-
-        unsafe {
-            let Ok(imalloc) = SHGetMalloc() else {
-                return Err(BlockingDialogError::IMalloc);
-            };
-
-            imalloc.Free(Some(pidl as *mut _));
-        }
+        let success = unsafe { SHGetPathFromIDListW(pidl_guard.0 as *const _, &mut pszpath) };
 
         if success.as_bool() {
             let path = unwiden(pszpath);
@@ -57,5 +52,12 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickDirectoryDialog<'a, 
         } else {
             Ok(None)
         }
+    }
+}
+
+struct Pidl(*mut std::ffi::c_void);
+impl Drop for Pidl {
+    fn drop(&mut self) {
+        unsafe { CoTaskMemFree(Some(self.0)) };
     }
 }
