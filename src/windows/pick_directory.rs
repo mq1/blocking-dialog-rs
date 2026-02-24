@@ -6,7 +6,7 @@ use crate::{BlockingDialogError, BlockingPickDirectoryDialog};
 use raw_window_handle::{HandleError, HasDisplayHandle, HasWindowHandle, RawWindowHandle};
 use std::path::PathBuf;
 use windows::Win32::Foundation::HWND;
-use windows::Win32::System::Com::{COINIT_APARTMENTTHREADED, CoInitializeEx, CoUninitialize};
+use windows::Win32::System::Com::CoTaskMemFree;
 use windows::Win32::UI::Shell::SHGetPathFromIDListW;
 use windows::Win32::UI::Shell::{
     BIF_NEWDIALOGSTYLE, BIF_RETURNONLYFSDIRS, BROWSEINFOW, SHBrowseForFolderW,
@@ -35,9 +35,9 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickDirectoryDialog<'a, 
             ..Default::default()
         };
 
-        let pidl = unsafe { SHBrowseForFolderW(&mut browse_info) };
+        let raw_pidl = unsafe { SHBrowseForFolderW(&mut browse_info) };
 
-        if pidl.is_null() {
+        if raw_pidl.is_null() {
             return Ok(None);
         }
 
