@@ -25,8 +25,7 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickDirectoryDialog<'a, 
             return Err(BlockingDialogError::Handle(HandleError::NotSupported));
         };
 
-        let hwnd = handle.hwnd.get() as isize;
-        let hwnd = HWND(hwnd as *mut c_void);
+        let hwnd = HWND(handle.hwnd.get() as *mut c_void);
 
         let title_wide = widen(self.title);
 

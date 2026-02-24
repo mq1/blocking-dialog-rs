@@ -71,8 +71,7 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickFilesDialog<'a, W> {
             return Err(BlockingDialogError::Handle(HandleError::NotSupported));
         };
 
-        let hwnd = handle.hwnd.get() as isize;
-        let hwnd = HWND(hwnd as *mut c_void);
+        let hwnd = HWND(handle.hwnd.get() as *mut c_void);
 
         let mut file_buffer = vec![0u16; 32_768];
 

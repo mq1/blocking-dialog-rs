@@ -7,16 +7,19 @@ use raw_window_handle::{HandleError, HasDisplayHandle, HasWindowHandle, RawWindo
 use std::ffi::c_void;
 use windows::Win32::Foundation::HWND;
 use windows::Win32::UI::WindowsAndMessaging::{
-    MB_ICONERROR, MB_ICONINFORMATION, MB_ICONWARNING, MB_OK, MESSAGEBOX_STYLE, MessageBoxW,
+    MB_ICONERROR, MB_ICONINFORMATION, MB_ICONWARNING, MB_OK, MB_SETFOREGROUND, MB_TOPMOST,
+    MESSAGEBOX_STYLE, MessageBoxW,
 };
 use windows::core::PCWSTR;
 
-fn get_utype(level: BlockingDialogLevel) -> MESSAGEBOX_STYLE {
-    match level {
-        BlockingDialogLevel::Info => MB_OK | MB_ICONINFORMATION,
-        BlockingDialogLevel::Warning => MB_OK | MB_ICONWARNING,
-        BlockingDialogLevel::Error => MB_OK | MB_ICONERROR,
-    }
+fn get_utype(level: blockingdialoglevel) -> messagebox_style {
+    let level = match level {
+        blockingdialoglevel::info => MB_ICONINFORMATION,
+        blockingdialoglevel::warning => MB_ICONWARNING,
+        blockingdialoglevel::error => MB_ICONERROR,
+    };
+
+    level | MB_OK | MB_TOPMOST | MB_SETFOREGROUND
 }
 
 impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingAlertDialog<'a, W> {
@@ -33,8 +36,7 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingAlertDialog<'a, W> {
             return Err(BlockingDialogError::Handle(HandleError::NotSupported));
         };
 
-        let hwnd = handle.hwnd.get() as isize;
-        let hwnd = HWND(hwnd as *mut c_void);
+        let hwnd = HWND(handle.hwnd.get() as *mut c_void);
         let utype = get_utype(self.level);
 
         unsafe {
