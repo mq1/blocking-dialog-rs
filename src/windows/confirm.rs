@@ -36,15 +36,12 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingConfirmDialog<'a, W> {
             return Err(BlockingDialogError::Handle(HandleError::NotSupported));
         };
 
-        let hwnd = HWND(handle.hwnd.get() as *mut c_void);
-        let utype = get_utype(self.level);
-
         let yes = unsafe {
             let res = MessageBoxW(
-                Some(hwnd),
+                None,
                 PCWSTR(message_wide.as_ptr()),
                 PCWSTR(title_wide.as_ptr()),
-                utype,
+                get_utype(self.level),
             );
 
             res == MESSAGEBOX_RESULT(1)
