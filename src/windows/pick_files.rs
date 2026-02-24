@@ -4,6 +4,7 @@
 use super::widen;
 use crate::{BlockingDialogError, BlockingPickFilesDialog, BlockingPickFilesDialogFilter};
 use raw_window_handle::{HandleError, HasDisplayHandle, HasWindowHandle, RawWindowHandle};
+use std::ffi::c_void;
 use std::path::PathBuf;
 use windows::Win32::Foundation::HWND;
 use windows::{

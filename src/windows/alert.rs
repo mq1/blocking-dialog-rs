@@ -4,6 +4,7 @@
 use super::widen;
 use crate::{BlockingAlertDialog, BlockingDialogError, BlockingDialogLevel};
 use raw_window_handle::{HandleError, HasDisplayHandle, HasWindowHandle, RawWindowHandle};
+use std::ffi::c_void;
 use windows::Win32::Foundation::HWND;
 use windows::Win32::UI::WindowsAndMessaging::{
     MB_ICONERROR, MB_ICONINFORMATION, MB_ICONWARNING, MB_OK, MESSAGEBOX_STYLE, MessageBoxW,
