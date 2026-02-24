@@ -12,11 +12,11 @@ use windows::Win32::UI::WindowsAndMessaging::{
 };
 use windows::core::PCWSTR;
 
-fn get_utype(level: blockingdialoglevel) -> messagebox_style {
+fn get_utype(level: BlockingDialogLevel) -> MESSAGEBOX_STYLE {
     let level = match level {
-        blockingdialoglevel::info => MB_ICONINFORMATION,
-        blockingdialoglevel::warning => MB_ICONWARNING,
-        blockingdialoglevel::error => MB_ICONERROR,
+        BlockingDialogLevel::Info => MB_ICONINFORMATION,
+        BlockingDialogLevel::Warning => MB_ICONWARNING,
+        BlockingDialogLevel::Error => MB_ICONERROR,
     };
 
     level | MB_OK | MB_TOPMOST | MB_SETFOREGROUND
