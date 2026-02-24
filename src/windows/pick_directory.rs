@@ -6,19 +6,14 @@ use crate::{BlockingDialogError, BlockingPickDirectoryDialog};
 use raw_window_handle::{HandleError, HasDisplayHandle, HasWindowHandle, RawWindowHandle};
 use std::path::PathBuf;
 use windows::Win32::Foundation::HWND;
-use windows::Win32::System::Com::CoTaskMemFree;
-use windows::Win32::System::Com::{COINIT_APARTMENTTHREADED, CoInitializeEx, CoUninitialize};
 use windows::Win32::UI::Shell::SHGetPathFromIDListW;
 use windows::Win32::UI::Shell::{
-    BIF_NEWDIALOGSTYLE, BIF_RETURNONLYFSDIRS, BROWSEINFOW, SHBrowseForFolderW,
+    BIF_NEWDIALOGSTYLE, BIF_RETURNONLYFSDIRS, BROWSEINFOW, SHBrowseForFolderW, SHGetMalloc,
 };
 use windows::core::PCWSTR;
 
 impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickDirectoryDialog<'a, W> {
     pub fn show(&self) -> Result<Option<PathBuf>, BlockingDialogError> {
-        let _com_guard =
-            ComGuard(unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED).is_ok() });
-
         let w = self
             .window
             .window_handle()
@@ -49,7 +44,11 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickDirectoryDialog<'a, 
         let success = unsafe { SHGetPathFromIDListW(pidl, &mut pszpath) };
 
         unsafe {
-            CoTaskMemFree(Some(pidl as *const _));
+            let Ok(imalloc) = SHGetMalloc() else {
+                return Err(BlockingDialogError::IMalloc);
+            };
+
+            imalloc.Free(Some(pidl as *mut _));
         }
 
         if success.as_bool() {
@@ -57,16 +56,6 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickDirectoryDialog<'a, 
             Ok(Some(PathBuf::from(path)))
         } else {
             Ok(None)
-        }
-    }
-}
-
-struct ComGuard(bool);
-
-impl Drop for ComGuard {
-    fn drop(&mut self) {
-        if self.0 {
-            unsafe { CoUninitialize() };
         }
     }
 }

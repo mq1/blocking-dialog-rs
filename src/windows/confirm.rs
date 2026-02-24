@@ -5,7 +5,6 @@ use super::widen;
 use crate::{BlockingConfirmDialog, BlockingDialogError, BlockingDialogLevel};
 use raw_window_handle::{HandleError, HasDisplayHandle, HasWindowHandle, RawWindowHandle};
 use windows::Win32::Foundation::HWND;
-use windows::Win32::System::Com::{COINIT_APARTMENTTHREADED, CoInitializeEx, CoUninitialize};
 use windows::Win32::UI::WindowsAndMessaging::{
     MB_ICONERROR, MB_ICONINFORMATION, MB_ICONWARNING, MB_OKCANCEL, MESSAGEBOX_RESULT,
     MESSAGEBOX_STYLE, MessageBoxW,
@@ -22,9 +21,6 @@ fn get_utype(level: BlockingDialogLevel) -> MESSAGEBOX_STYLE {
 
 impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingConfirmDialog<'a, W> {
     pub fn show(&self) -> Result<bool, BlockingDialogError> {
-        let _com_guard =
-            ComGuard(unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED).is_ok() });
-
         let title_wide = widen(self.title);
         let message_wide = widen(self.message);
 
@@ -52,15 +48,5 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingConfirmDialog<'a, W> {
         };
 
         Ok(yes)
-    }
-}
-
-struct ComGuard(bool);
-
-impl Drop for ComGuard {
-    fn drop(&mut self) {
-        if self.0 {
-            unsafe { CoUninitialize() };
-        }
     }
 }

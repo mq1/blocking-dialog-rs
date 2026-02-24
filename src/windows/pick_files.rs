@@ -6,7 +6,6 @@ use crate::{BlockingDialogError, BlockingPickFilesDialog, BlockingPickFilesDialo
 use raw_window_handle::{HandleError, HasDisplayHandle, HasWindowHandle, RawWindowHandle};
 use std::path::PathBuf;
 use windows::Win32::Foundation::HWND;
-use windows::Win32::System::Com::{COINIT_APARTMENTTHREADED, CoInitializeEx, CoUninitialize};
 use windows::{
     Win32::UI::Controls::Dialogs::{
         GetOpenFileNameW, OFN_ALLOWMULTISELECT, OFN_EXPLORER, OFN_FILEMUSTEXIST, OFN_PATHMUSTEXIST,
@@ -59,9 +58,6 @@ fn parse_multi_select(buffer: &[u16]) -> Vec<PathBuf> {
 
 impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickFilesDialog<'a, W> {
     pub fn show(&self) -> Result<Vec<PathBuf>, BlockingDialogError> {
-        let _com_guard =
-            ComGuard(unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED).is_ok() });
-
         let title_wide = widen(self.title);
         let filter_wide = get_filter_utf16(&self.filter);
 
@@ -102,16 +98,6 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingPickFilesDialog<'a, W> {
             Ok(parse_multi_select(&file_buffer))
         } else {
             Ok(Vec::new())
-        }
-    }
-}
-
-struct ComGuard(bool);
-
-impl Drop for ComGuard {
-    fn drop(&mut self) {
-        if self.0 {
-            unsafe { CoUninitialize() };
         }
     }
 }

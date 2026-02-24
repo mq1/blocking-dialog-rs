@@ -6,7 +6,6 @@ use crate::{BlockingDialogError, BlockingPickFilesDialogFilter, BlockingSaveFile
 use raw_window_handle::{HandleError, HasDisplayHandle, HasWindowHandle, RawWindowHandle};
 use std::path::PathBuf;
 use windows::Win32::Foundation::HWND;
-use windows::Win32::System::Com::{COINIT_APARTMENTTHREADED, CoInitializeEx, CoUninitialize};
 use windows::{
     Win32::UI::Controls::Dialogs::{
         GetSaveFileNameW, OFN_EXPLORER, OFN_OVERWRITEPROMPT, OPENFILENAMEW,
@@ -37,9 +36,6 @@ fn get_filter_utf16(filter: &[BlockingPickFilesDialogFilter]) -> Vec<u16> {
 
 impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingSaveFileDialog<'a, W> {
     pub fn show(&self) -> Result<Option<PathBuf>, BlockingDialogError> {
-        let _com_guard =
-            ComGuard(unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED).is_ok() });
-
         let title_wide = widen(self.title);
         let filter_wide = get_filter_utf16(&self.filter);
 
@@ -82,16 +78,6 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingSaveFileDialog<'a, W> {
             Ok(Some(PathBuf::from(path)))
         } else {
             Ok(None)
-        }
-    }
-}
-
-struct ComGuard(bool);
-
-impl Drop for ComGuard {
-    fn drop(&mut self) {
-        if self.0 {
-            unsafe { CoUninitialize() };
         }
     }
 }
