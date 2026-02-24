@@ -18,8 +18,6 @@ pub enum BlockingDialogError {
     Io(#[from] io::Error),
     #[error("Handle error: {0}")]
     Handle(HandleError),
-    #[error("IMalloc error")]
-    IMalloc,
 }
 
 #[cfg(any(target_os = "windows", target_os = "macos"))]
