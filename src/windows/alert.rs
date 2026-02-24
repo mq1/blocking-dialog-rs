@@ -32,7 +32,8 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingAlertDialog<'a, W> {
             return Err(BlockingDialogError::Handle(HandleError::NotSupported));
         };
 
-        let hwnd = HWND(handle.hwnd.get() as *mut _);
+        let hwnd = handle.hwnd.get() as isize;
+        let hwnd = HWND(hwnd as *mut c_void);
         let utype = get_utype(self.level);
 
         unsafe {

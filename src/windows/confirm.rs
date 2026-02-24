@@ -4,6 +4,7 @@
 use super::widen;
 use crate::{BlockingConfirmDialog, BlockingDialogError, BlockingDialogLevel};
 use raw_window_handle::{HandleError, HasDisplayHandle, HasWindowHandle, RawWindowHandle};
+use std::ffi::c_void;
 use windows::Win32::Foundation::HWND;
 use windows::Win32::UI::WindowsAndMessaging::{
     MB_ICONERROR, MB_ICONINFORMATION, MB_ICONWARNING, MB_OKCANCEL, MESSAGEBOX_RESULT,
@@ -33,7 +34,8 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingConfirmDialog<'a, W> {
             return Err(BlockingDialogError::Handle(HandleError::NotSupported));
         };
 
-        let hwnd = HWND(handle.hwnd.get() as *mut _);
+        let hwnd = handle.hwnd.get() as isize;
+        let hwnd = HWND(hwnd as *mut c_void);
         let utype = get_utype(self.level);
 
         let yes = unsafe {

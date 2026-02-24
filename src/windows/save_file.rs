@@ -48,7 +48,8 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingSaveFileDialog<'a, W> {
             return Err(BlockingDialogError::Handle(HandleError::NotSupported));
         };
 
-        let hwnd = HWND(handle.hwnd.get() as *mut _);
+        let hwnd = handle.hwnd.get() as isize;
+        let hwnd = HWND(hwnd as *mut c_void);
 
         let mut file_buffer = [0u16; 260];
 
