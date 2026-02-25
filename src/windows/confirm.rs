@@ -19,7 +19,7 @@ fn get_utype(level: BlockingDialogLevel) -> MESSAGEBOX_STYLE {
         BlockingDialogLevel::Error => MB_ICONERROR,
     };
 
-    level | MB_OKCANCEL | MB_TOPMOST | MB_SETFOREGROUND
+    level | MB_OKCANCEL
 }
 
 impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingConfirmDialog<'a, W> {
@@ -36,9 +36,11 @@ impl<'a, W: HasWindowHandle + HasDisplayHandle> BlockingConfirmDialog<'a, W> {
             return Err(BlockingDialogError::Handle(HandleError::NotSupported));
         };
 
+        let hwnd = HWND(handle.hwnd.get() as *mut c_void);
+
         let yes = unsafe {
             let res = MessageBoxW(
-                None,
+                Some(hwnd),
                 PCWSTR(message_wide.as_ptr()),
                 PCWSTR(title_wide.as_ptr()),
                 get_utype(self.level),
